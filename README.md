@@ -94,7 +94,7 @@ inspi open                                     # open the hub note in Obsidian
 inspi doctor                                   # check every link, print the fix for what is missing
 ```
 
-`--color` takes a hex or a name and ranks by perceptual distance to each note's palette. Other filters: `--technique --author --domain --use-for`. Reclassify old notes with `~/.local/share/wiki-inspi/venv/bin/python src/enrich.py --reenrich-all`; check one note with `--validate NOTE.md`.
+`--color` takes a hex or a name and ranks by perceptual distance to each note's palette. Other filters: `--technique --author --domain --use-for`. Reclassify old notes with `python3 src/enrich.py --reenrich-all` (use `~/.local/share/wiki-inspi/venv/bin/python` instead if `install.sh` created that venv); check one note with `--validate NOTE.md`.
 
 ## Privacy and security
 
