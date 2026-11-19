@@ -1,0 +1,54 @@
+# Wiki Inspi vocabulary, read by src/enrich.py.
+# - use_for: CLOSED list. The model may only pick from it; anything else is dropped.
+#   Replace the examples with your own projects or purposes.
+# - synonyms: variant -> canonical tag. Applied to tags, style, movement, technique, mood
+#   after lowercase-kebab normalisation, so "Brutalist" and "brutalisme" make ONE tag.
+use_for:
+  - website
+  - app-ui
+  - branding
+  - poster-design
+  - motion-design
+  - photography
+  - illustration
+  - 3d-art
+  - personal-project
+  - client-work
+
+synonyms:
+  brutalist: brutalism
+  brutalisme: brutalism
+  brutaliste: brutalism
+  art-nouveau-style: art-nouveau
+  artnouveau: art-nouveau
+  bauhaus-style: bauhaus
+  minimalist: minimalism
+  minimaliste: minimalism
+  minimal: minimalism
+  maximalist: maximalism
+  maximaliste: maximalism
+  retro-futuristic: retro-futurism
+  retrofuturism: retro-futurism
+  retrofuturisme: retro-futurism
+  swiss-style: swiss-design
+  international-typographic-style: swiss-design
+  style-suisse: swiss-design
+  dark-ui: dark-mode
+  darkmode: dark-mode
+  dark-theme: dark-mode
+  glassmorphic: glassmorphism
+  neumorphic: neumorphism
+  gradient: gradients
+  grain: film-grain
+  grainy: film-grain
+  riso: risograph
+  risographie: risograph
+  analog-photography: film-photography
+  photo-argentique: film-photography
+  argentique: film-photography
+  3d-render: 3d
+  3d-rendering: 3d
+  cgi: 3d
+  typographic: typography
+  typo: typography
+  editorial-design: editorial

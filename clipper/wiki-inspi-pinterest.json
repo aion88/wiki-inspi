@@ -1,0 +1,64 @@
+{
+	"schemaVersion": "0.1.0",
+	"name": "Wiki Inspi Pinterest",
+	"behavior": "create",
+	"noteContentFormat": "![]({{selector:img[elementtiming^=closeup-image-main]?src}})\n\n{{description}}\n\n[Source]({{url}})",
+	"properties": [
+		{
+			"name": "type",
+			"value": "image",
+			"type": "text"
+		},
+		{
+			"name": "source_url",
+			"value": "{{url}}",
+			"type": "text"
+		},
+		{
+			"name": "image_url",
+			"value": "{{selector:img[elementtiming^=closeup-image-main]?src}}",
+			"type": "text"
+		},
+		{
+			"name": "page_title",
+			"value": "{{title}}",
+			"type": "text"
+		},
+		{
+			"name": "author",
+			"value": "{{selector:[data-test-id=creator-profile-name]}}",
+			"type": "text"
+		},
+		{
+			"name": "site",
+			"value": "{{site}}",
+			"type": "text"
+		},
+		{
+			"name": "published",
+			"value": "{{published}}",
+			"type": "text"
+		},
+		{
+			"name": "captured",
+			"value": "{{date|date:\"YYYY-MM-DD\"}}",
+			"type": "date"
+		},
+		{
+			"name": "ingest_source",
+			"value": "webclipper",
+			"type": "text"
+		},
+		{
+			"name": "tags",
+			"value": "inspi",
+			"type": "multitext"
+		}
+	],
+	"triggers": [
+		"/^https?:\\/\\/([a-z0-9-]+\\.)?pinterest\\.[a-z.]+\\/pin\\//"
+	],
+	"noteNameFormat": "{{title|safe_name}}",
+	"path": "Inbox",
+	"vault": "Wiki Inspi"
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>io.github.wiki-inspi.enricher</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>@REPO@/scripts/enrich.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHON</key><string>@PYTHON@</string>
+    <key>PATH</key><string>@HOME@/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartInterval</key><integer>3600</integer>
+  <key>StandardOutPath</key><string>@LOGDIR@/enricher.stdout.log</string>
+  <key>StandardErrorPath</key><string>@LOGDIR@/enricher.stderr.log</string>
+</dict>
+</plist>

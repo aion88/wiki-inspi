@@ -1,0 +1,24 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.venv/
+tests/e2e/out/
+tests/e2e/.cache/
+
+# Never commit local state, tokens or captured content
+*.token
+token
+.env
+.env.*
+config.json
+*.log
+logs/
+vault/
+Inbox/
+Library/
+_attachments/
+*.jpg
+*.jpeg
+*.webp
+!extension/*.png

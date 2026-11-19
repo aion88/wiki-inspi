@@ -1,0 +1,64 @@
+{
+	"schemaVersion": "0.1.0",
+	"name": "Wiki Inspi Commons",
+	"behavior": "create",
+	"noteContentFormat": "![]({{selector:.fullMedia a?href}})\n\n{{description}}\n\n[Source]({{url}})",
+	"properties": [
+		{
+			"name": "type",
+			"value": "image",
+			"type": "text"
+		},
+		{
+			"name": "source_url",
+			"value": "{{url}}",
+			"type": "text"
+		},
+		{
+			"name": "image_url",
+			"value": "{{selector:.fullMedia a?href}}",
+			"type": "text"
+		},
+		{
+			"name": "page_title",
+			"value": "{{title}}",
+			"type": "text"
+		},
+		{
+			"name": "author",
+			"value": "{{selector:#fileinfotpl_aut + td bdi|split:\", \"|first}}",
+			"type": "text"
+		},
+		{
+			"name": "site",
+			"value": "{{site}}",
+			"type": "text"
+		},
+		{
+			"name": "published",
+			"value": "{{published}}",
+			"type": "text"
+		},
+		{
+			"name": "captured",
+			"value": "{{date|date:\"YYYY-MM-DD\"}}",
+			"type": "date"
+		},
+		{
+			"name": "ingest_source",
+			"value": "webclipper",
+			"type": "text"
+		},
+		{
+			"name": "tags",
+			"value": "inspi",
+			"type": "multitext"
+		}
+	],
+	"triggers": [
+		"/^https?:\\/\\/commons\\.wikimedia\\.org\\/wiki\\/File:/"
+	],
+	"noteNameFormat": "{{title|safe_name}}",
+	"path": "Inbox",
+	"vault": "Wiki Inspi"
+}

@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Wiki Inspi",
+  "version": "0.1.0",
+  "description": "Right-click any image: send it to the Wiki Inspi vault (local receiver).",
+  "permissions": [
+    "contextMenus",
+    "scripting",
+    "activeTab",
+    "storage",
+    "notifications"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

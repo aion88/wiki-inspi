@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+"""inspi: open, search and build moodboards from the Wiki Inspi vault.
+
+  inspi open
+  inspi doctor
+  inspi search "dark blue" [--color #hex|name] [--style x] [--mood x] [--limit N] [--json]
+  inspi board "ferrofluid" --name demo-ferrofluid [same filters]
+
+Vault: from ~/.config/wiki-inspi/config.json (override: INSPI_VAULT). Library notes only.
+"""
+import argparse
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import inspilib as L  # noqa: E402
+from urllib.parse import quote  # noqa: E402
+
+
+def add_filters(p):
+    p.add_argument("query", nargs="?", default="", help="free text over title/tags/style/mood/subject/why")
+    p.add_argument("--color", help="#rrggbb or a name (blue, dark blue, red...); nearest palette color wins")
+    p.add_argument("--style")
+    p.add_argument("--mood")
+    p.add_argument("--technique")
+    p.add_argument("--author")
+    p.add_argument("--domain")
+    p.add_argument("--use-for", dest="use_for")
+    p.add_argument("--limit", type=int, default=20, help="0 = no limit")
+    p.add_argument("--vault", default=os.environ.get("INSPI_VAULT", str(L.VAULT)))
+
+
+def run_search(a):
+    vault = Path(a.vault)
+    filters = {k: getattr(a, k) for k in ("style", "mood", "technique", "author", "domain", "use_for")}
+    try:
+        return vault, L.search(L.load_notes(vault), a.query, a.color, filters, a.limit)
+    except ValueError as e:
+        sys.exit(f"inspi: {e}")
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog="inspi")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("open", help="open the hub in Obsidian")
+    sub.add_parser("doctor", help="check every link of the chain and print the fix for what is missing")
+    s = sub.add_parser("search", help="search captures")
+    add_filters(s)
+    s.add_argument("--json", action="store_true")
+    b = sub.add_parser("board", help="generate Moodboards/<name>.excalidraw.md")
+    add_filters(b)
+    b.add_argument("--name", required=True)
+    a = ap.parse_args(argv)
+
+    if a.cmd == "doctor":
+        import doctor
+        return doctor.main()
+    if a.cmd == "open":
+        uri = f"obsidian://open?vault={quote(Path(L.VAULT).name)}&file={quote('_Wiki Inspi')}"
+        return subprocess.call(["open", uri])
+
+    vault, results = run_search(a)
+    if a.cmd == "search":
+        if a.json:
+            print(json.dumps([L.result_json(r, vault) for r in results], indent=2, ensure_ascii=False))
+            return 0
+        for r in results:
+            j = L.result_json(r, vault)
+            d = f" dE={j['color_distance']}" if j["color_distance"] is not None else ""
+            print(f"{j['rel']}\t{j['title']}\t{','.join(j['style'])}\t{j['main_color'] or ''}{d}")
+        if not results:
+            print("(no match)", file=sys.stderr)
+        return 0
+
+    notes = [r["note"] for r in results]
+    if not notes:
+        sys.exit("inspi: no match, no board written")
+    try:
+        out, placed, skipped = L.write_board(vault, a.name, notes, title=a.query or a.name)
+    except ValueError as e:
+        sys.exit(f"inspi: {e}")
+    print(f"{out}  ({placed} images placed, {len(skipped)} skipped without local image)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

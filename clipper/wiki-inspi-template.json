@@ -1,0 +1,66 @@
+{
+	"schemaVersion": "0.1.0",
+	"name": "Wiki Inspi",
+	"behavior": "create",
+	"noteContentFormat": "![]({{image}})\n\n{{description}}\n\n[Source]({{url}})",
+	"properties": [
+		{
+			"name": "type",
+			"value": "image",
+			"type": "text"
+		},
+		{
+			"name": "source_url",
+			"value": "{{url}}",
+			"type": "text"
+		},
+		{
+			"name": "image_url",
+			"value": "{{image}}",
+			"type": "text"
+		},
+		{
+			"name": "page_title",
+			"value": "{{title}}",
+			"type": "text"
+		},
+		{
+			"name": "author",
+			"value": "{{author}}",
+			"type": "text"
+		},
+		{
+			"name": "site",
+			"value": "{{site}}",
+			"type": "text"
+		},
+		{
+			"name": "published",
+			"value": "{{published}}",
+			"type": "text"
+		},
+		{
+			"name": "captured",
+			"value": "{{date|date:\"YYYY-MM-DD\"}}",
+			"type": "date"
+		},
+		{
+			"name": "ingest_source",
+			"value": "webclipper",
+			"type": "text"
+		},
+		{
+			"name": "tags",
+			"value": "inspi",
+			"type": "multitext"
+		}
+	],
+	"triggers": [
+		"/^https?:\\/\\/(www\\.)?behance\\.net\\/gallery\\//",
+		"/^https?:\\/\\/(www\\.)?cosmos\\.so\\//",
+		"/^https?:\\/\\/(www\\.)?unsplash\\.com\\/photos\\//"
+	],
+	"noteNameFormat": "{{title|safe_name}}",
+	"path": "Inbox",
+	"vault": "Wiki Inspi"
+}

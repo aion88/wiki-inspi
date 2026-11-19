@@ -1,0 +1,190 @@
+filters:
+  and:
+  - file.inFolder("Library")
+formulas:
+  cover: link(thumbnail)
+properties:
+  main_color:
+    displayName: Color
+  color_temperature:
+    displayName: Temperature
+  style:
+    displayName: Style
+  mood:
+    displayName: Mood
+  author:
+    displayName: Author
+  technique:
+    displayName: Technique
+  use_for:
+    displayName: Use for
+  domain:
+    displayName: Domain
+  captured:
+    displayName: Captured
+views:
+- type: cards
+  name: Recent
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  sort:
+  - property: captured
+    direction: DESC
+  limit: 60
+- type: cards
+  name: By main color
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: main_color
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: cards
+  name: By style
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: style
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: cards
+  name: By mood
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: mood
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: cards
+  name: By author
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: author
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: cards
+  name: By technique
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: technique
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: cards
+  name: By use
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: use_for
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: cards
+  name: By domain
+  order:
+  - file.name
+  - style
+  - mood
+  - main_color
+  - author
+  - technique
+  image: formula.cover
+  imageFit: contain
+  imageAspectRatio: 0.8
+  cardSize: 260
+  groupBy:
+    property: domain
+    direction: ASC
+  sort:
+  - property: captured
+    direction: DESC
+- type: table
+  name: Palette (table)
+  order:
+  - file.name
+  - main_color
+  - color_temperature
+  - style
+  - mood
+  - technique
+  - author
+  - use_for
+  - captured
+  sort:
+  - property: captured
+    direction: DESC
