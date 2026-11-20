@@ -247,6 +247,7 @@ def test_server_board_delete_restore(server, vault):
                 "Library/dashboard.md",
                 "Moodboards/my-board.excalidraw.md",
                 "../../etc/passwd",
+                "Library/../Moodboards/my-board.excalidraw.md",
                 "Inbox/copy.md",
             ]
         },

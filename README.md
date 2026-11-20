@@ -102,7 +102,7 @@ inspi doctor                                   # check every link, print the fix
 
 ### The gallery
 
-`install.sh` adds a launchd agent (`io.github.wiki-inspi.map`) that serves the gallery on `http://127.0.0.1:18766/` and a **Wiki Inspi** app (in `/Applications`, or `~/Applications` if that is not writable) that opens it, starting the server first if needed. The page is rebuilt after each classification pass. Rebuild it by hand with `inspi map`; rebuild the app with `scripts/make_app.sh`.
+`install.sh` (unless `--no-launchd`) adds a launchd agent (`io.github.wiki-inspi.map`) that serves the gallery on `http://127.0.0.1:18766/` and a **Wiki Inspi** app (in `/Applications`, or `~/Applications` if that is not writable) that opens it, starting the server first if needed. The page is rebuilt after each classification pass. Rebuild it by hand with `inspi map`; rebuild the app with `scripts/make_app.sh`.
 
 - **Wall**: every image in columns, with search, sort (newest, oldest, color, title, board, family) and filters by type (photography, cinematic, illustration...), technique (ink, watercolor, mixed media...), what it shows (abstract, geometric, people...), color and temperature. Filters are keyword rules over what the classifier wrote, recomputed on every build, no extra model call.
 - **Families**: a map where close images attract (same style, technique, mood, neighbouring colors). Families are communities in a nearest-neighbour graph (TF-IDF over the classification fields plus Lab color distance, Louvain).

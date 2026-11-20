@@ -4,7 +4,10 @@
 Local only. Every request must carry Host == 127.0.0.1:PORT (DNS rebinding); POST also needs
 Origin == http://127.0.0.1:PORT and Content-Type: application/json (other web pages are refused,
 no CORS headers are ever sent). Files served: the map folder and the vault's _attachments only.
-Writes: Moodboards/<safe name>.excalidraw.md via inspilib.write_board, nothing else.
+Writes: Moodboards/<safe name>.excalidraw.md (new, or appended after a backup in
+~/.local/state/wiki-inspi/board-backups/); /delete moves Library/ or Inbox/ notes, and images
+nothing else uses, to <vault>/.trash/wiki-inspi/<batch>/ (logged in .wiki-inspi/deletions.jsonl);
+/restore moves a batch back without overwriting.
 """
 
 from __future__ import annotations
@@ -62,10 +65,11 @@ def delete_notes(rels: list[str]) -> dict:
     dest = TRASH / batch
     notes = []
     for r in rels:
-        if not (r.startswith("Library/") or r.startswith("Inbox/")) or not r.endswith(".md"):
-            continue
         p = _inside(VAULT, r)
-        if p:
+        if not p or p.suffix != ".md":
+            continue
+        r = str(p.relative_to(VAULT.resolve()))  # judged after resolving: Library/../x is refused
+        if p.parts and r.split("/")[0] in ("Library", "Inbox"):
             notes.append((r, p))
     skip = {p for _, p in notes}
     corpus = _corpus(skip)
@@ -201,7 +205,7 @@ class H(BaseHTTPRequestHandler):
                 skipped = [None] * dup
             else:
                 if (VAULT / "Moodboards" / f"{name}.excalidraw.md").exists() and not req.get("replace"):
-                    return self._send(409, json.dumps({"error": f"un moodboard {name} existe déjà : choisis « Ajouter à » ou un autre nom"}).encode(), "application/json")
+                    return self._send(409, json.dumps({"error": f"a moodboard named {name} already exists: use Add to, or pick another name"}).encode(), "application/json")
                 out, placed, skipped = L.write_board(VAULT, name, notes, title=title)
         except ValueError as e:
             return self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")

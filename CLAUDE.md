@@ -74,7 +74,7 @@ Give ONE step, wait for the human to say it is done, verify (command or question
 6. **Classifier check.** Confirm the backend works with one capture: the note moves from `Inbox/`
    to `Library/` with `style`, `palette` and `main_color` filled. If not: `enrich.log`, then
    `inspi doctor`.
-7. **Gallery.** Ask them to open **Wiki Inspi** from Applications (installed by `install.sh`). Verify: the page loads on `http://127.0.0.1:18766/` and shows their first capture. If the app shows a notification instead, run `inspi doctor` (agent `map`).
+7. **Gallery.** Ask them to open **Wiki Inspi** from Applications (installed by `install.sh`; with `--no-launchd` run `scripts/make_app.sh` and `inspi serve` instead). Verify: the page loads on `http://127.0.0.1:18766/` and shows their first capture. If the app shows a notification instead, run `inspi doctor` (agent `map`).
 8. **Finish.** Show them `inspi search "<word>"` and `inspi board "<word>" --name test`, and that
    `inspi doctor` is the first thing to run when something stops working.
 
