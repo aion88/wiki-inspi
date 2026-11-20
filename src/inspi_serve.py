@@ -69,7 +69,7 @@ def delete_notes(rels: list[str]) -> dict:
         if not p or p.suffix != ".md":
             continue
         r = str(p.relative_to(VAULT.resolve()))  # judged after resolving: Library/../x is refused
-        if p.parts and r.split("/")[0] in ("Library", "Inbox"):
+        if r.split("/")[0] in ("Library", "Inbox"):
             notes.append((r, p))
     skip = {p for _, p in notes}
     corpus = _corpus(skip)
@@ -80,7 +80,7 @@ def delete_notes(rels: list[str]) -> dict:
         shutil.move(str(p), str(dest / r))
         moved.append(r)
         for a in atts:
-            ap = _inside(VAULT, a)
+            ap = _inside(ATT, a[len("_attachments/"):])  # images only: never another vault file
             if ap and not any(a in t for t in corpus):
                 (dest / a).parent.mkdir(parents=True, exist_ok=True)
                 shutil.move(str(ap), str(dest / a))

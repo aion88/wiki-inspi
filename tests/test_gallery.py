@@ -269,3 +269,10 @@ def test_server_board_delete_restore(server, vault):
         and (vault / "_attachments/copy.png").exists()
     )
     assert call(server, "/restore", {"batch": "../x"})[0] == 400
+
+
+def test_delete_never_takes_a_non_image_file(server, vault):
+    (vault / "Inbox/evil.md").write_text("# Evil\n\n![[_attachments/../Library/dashboard.md]]\n")
+    st, out = call(server, "/delete", {"notes": ["Inbox/evil.md"]})
+    assert st == 200 and json.loads(out)["notes"] == 1
+    assert (vault / "Library/dashboard.md").exists()
