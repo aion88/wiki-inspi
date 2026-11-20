@@ -85,6 +85,8 @@ Then, once:
 
 ## Usage
 
+New here? [docs/TUTORIAL.md](docs/TUTORIAL.md) walks the full loop, from saving an image to opening a moodboard.
+
 ```sh
 inspi search "dark blue"                       # free text over title, tags, style, mood, subject
 inspi search --color "#1e3a8a" --style minimalism --mood calm --limit 10
