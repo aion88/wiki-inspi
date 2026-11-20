@@ -64,11 +64,20 @@ Tips:
 - Check the count with `inspi search` first. Fewer than 6 results makes a thin board: drop the narrowest filter.
 - Re-running `inspi board` with the same `--name` rebuilds the board from the current library, so a board can follow your collection as it grows.
 
-## 6. Optional: ask in plain words
+## 6. Browse the gallery
+
+Open **Wiki Inspi** from Applications (or run `inspi map`). It is the same library as a page in your browser:
+
+1. **Wall**: scroll everything, type in the search box, or open **Filters** and pick, say, *Ink* and *People*. Within one row the choices add up (ink OR watercolor); across rows they narrow down (ink AND people).
+2. **Families**: switch to the map to see which images belong together. Click a family chip to show only that family on the wall.
+3. **A board in three clicks**: press **+** on the images you want, type a name, **Create moodboard**. To grow a board later, pick images and choose **Add to: <board>** in the menu. The page then proposes similar images to keep going.
+4. **Clean up**: the **Duplicates** chip groups copies; the green one is kept. **×** on any card sends it to the vault trash, and the **Undo** button in the toast brings it back.
+
+## 7. Optional: ask in plain words
 
 If you use [Claude Code](https://claude.com/claude-code), you can skip the flags: open it in the vault folder (or in an Obsidian plugin that embeds it) and ask "make me a moodboard of calm dark-blue images with organic shapes". It can translate the sentence into `inspi search` / `inspi board` filters, check the count, and open the board. Read what a third-party Obsidian plugin can access before installing one: some let the agent run commands in your vault.
 
-## 7. Housekeeping
+## 8. Housekeeping
 
 - `inspi doctor` checks every link (receiver, token, launchd agents, model access) and prints the fix for what is broken.
 - Notes classified by an older version (schema v1) can be brought up to date with `python3 src/enrich.py --reenrich-all` (or the venv's Python if `install.sh` created one). Notes already on the current schema are left as they are.

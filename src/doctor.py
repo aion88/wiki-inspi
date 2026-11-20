@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config as _config  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
-LABELS = ["receiver", "watcher", "enricher"]
+LABELS = ["receiver", "watcher", "enricher", "map"]
 LABEL_PREFIX = "io.github.wiki-inspi"
 PLUGINS = {"obsidian-excalidraw-plugin": "Excalidraw", "dataview": "Dataview", "note-gallery": "Note Gallery"}
 VAULT_DIRS = ["Inbox", "Library", "MOCs", "Moodboards", "_attachments"]

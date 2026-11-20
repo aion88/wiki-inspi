@@ -12,11 +12,12 @@ PY="$HOME/.local/share/wiki-inspi/venv/bin/python"; [ -x "$PY" ] || PY="$(comman
 SERVICE="$("$PY" "$REPO/src/config.py" get keychain_service 2>/dev/null || echo wiki-inspi-token)"
 LOG_DIR="$("$PY" "$REPO/src/config.py" get log_dir 2>/dev/null || echo "$HOME/Library/Logs/wiki-inspi")"
 
-for name in receiver watcher enricher; do
+for name in receiver watcher enricher map; do
   launchctl bootout "gui/$(id -u)/$LABEL_PREFIX.$name" 2>/dev/null || true
   rm -f "$HOME/Library/LaunchAgents/$LABEL_PREFIX.$name.plist"
 done
 rm -f "$HOME/.local/bin/inspi" "$HOME/.local/state/wiki-inspi/pair-open"
+rm -rf "/Applications/Wiki Inspi.app" "$HOME/Applications/Wiki Inspi.app"
 security delete-generic-password -a "${USER:-$(id -un)}" -s "$SERVICE" >/dev/null 2>&1 || true
 rm -rf "$HOME/.local/share/wiki-inspi/venv"
 [ "$PURGE_CONFIG" = 1 ] && rm -rf "$CONF_DIR"

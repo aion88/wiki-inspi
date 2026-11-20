@@ -1,0 +1,521 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wiki Inspi</title>
+<style>
+:root{--bg:#121214;--panel:#1c1c20;--ink:#ececef;--mute:#8a8a94;--line:#2c2c33;--acc:#d9b98c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:rgba(18,18,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+h1{font-size:15px;margin:0 8px 0 0;font-weight:600;letter-spacing:.02em}
+.tabs button,.chip{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit}
+.tabs button.on,.chip.on{background:var(--ink);color:var(--bg)}
+input[type=search]{flex:1;min-width:160px;max-width:340px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit}
+.count{color:var(--mute);font-size:12px}
+#fams{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.chip{white-space:nowrap;font-size:12px;display:flex;gap:6px;align-items:center}
+.chip i{font-style:normal;color:var(--mute)}
+.chip.on i{color:#555}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+#wall{columns:6 220px;column-gap:10px;padding:12px 16px}
+.card{break-inside:avoid;margin:0 0 10px;border-radius:8px;overflow:hidden;background:var(--panel);cursor:zoom-in;position:relative}
+.card img{display:block;width:100%;height:auto}
+.card span{position:absolute;inset:auto 0 0 0;padding:18px 8px 6px;font-size:11px;background:linear-gradient(transparent,rgba(0,0,0,.75));opacity:0;transition:opacity .15s}
+.card:hover span{opacity:1}
+#graph{display:none;position:fixed;left:0;right:0;bottom:0;top:0}
+canvas{display:block;width:100%;height:100%;cursor:grab}
+canvas.drag{cursor:grabbing}
+#hint{position:fixed;left:16px;bottom:12px;color:var(--mute);font-size:12px;pointer-events:none}
+#side{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .2s;z-index:10;overflow:auto;padding:16px}
+#side.open{transform:none}
+#side img{width:100%;border-radius:6px;display:block}
+#side h2{font-size:15px;margin:12px 0 6px}
+#side .meta{color:var(--mute);font-size:12px;margin:4px 0}
+#side .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#side a,#side button{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;font:inherit;cursor:pointer;font-size:12px}
+#close{position:absolute;top:8px;right:10px;border:none!important;font-size:18px!important}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid var(--line)}
+#fbtn{margin-left:auto}
+#filters{display:none;padding:6px 16px 10px;border-bottom:1px solid var(--line);background:#16161a}
+#filters.open{display:block}
+.frow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.frow b{width:110px;flex:none;font-size:12px;color:var(--mute);font-weight:500}
+.frow .chip{padding:3px 10px}
+#clear{font-size:12px;color:var(--mute);background:none;border:none;cursor:pointer;text-decoration:underline}
+.card .pick{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.45);color:#fff;font-size:16px;line-height:22px;text-align:center;opacity:0;cursor:pointer;z-index:2}
+.card:hover .pick,.card.sel .pick{opacity:1}
+.card.sel{outline:3px solid var(--acc);outline-offset:-3px}
+.card.sel .pick{background:var(--acc);color:#111;border-color:var(--acc)}
+#bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:8;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:calc(100% - 32px)}
+#bar input{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;width:190px}
+#bar button{background:var(--acc);color:#111;border:none;border-radius:8px;padding:7px 12px;font:inherit;font-weight:600;cursor:pointer}
+#bar button.ghost{background:none;color:var(--mute);font-weight:400}
+#bar .msg{font-size:12px;color:var(--mute)}
+#bar select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit}
+#bar button.alt{background:var(--bg);color:var(--ink);border:1px solid var(--line);font-weight:500}
+#bar button:disabled{opacity:.4;cursor:default}
+#sort{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit}
+.card .del{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.55);color:#fff;font-size:15px;line-height:22px;text-align:center;opacity:0;cursor:pointer;z-index:2}
+.card:hover .del{opacity:1}
+.card .del:hover{background:#c0392b;border-color:#c0392b}
+.grp{break-inside:avoid;column-span:all;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;padding:12px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:#18181c}
+.grp .gh{width:100%;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--mute)}
+.grp .gh button,#dupall{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+.grp .card{width:180px;margin:0}
+.grp .card.keep{outline:2px solid #4caf50;outline-offset:-2px}
+.grp .card .tag{position:absolute;left:6px;bottom:6px;background:#4caf50;color:#111;font-size:11px;padding:1px 6px;border-radius:6px;z-index:2}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:20;background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 12px;font-size:13px;display:none;gap:10px;align-items:center}
+#toast.on{display:flex}
+#toast button{background:none;border:none;color:#1e66d0;font:inherit;font-weight:600;cursor:pointer}
+#simbar{display:none;padding:10px 16px 0;color:var(--mute);font-size:13px;gap:10px;align-items:center;flex-wrap:wrap}
+#simbar.on{display:flex}
+#simbar button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+#bar a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Wiki Inspi</h1>
+  <div class="tabs"><button id="tWall" class="on">Mur</button> <button id="tGraph">Familles</button></div>
+  <input id="q" type="search" placeholder="Chercher : titre, style, ambiance, tableau">
+  <span class="count" id="count"></span>
+  <select id="sort" title="Trier"><option value="new">Plus récentes</option><option value="old">Plus anciennes</option><option value="color">Par couleur</option><option value="title">Par titre</option><option value="board">Par tableau</option><option value="fam">Par famille</option></select>
+  <button id="fbtn" class="chip">Filtres</button>
+</header>
+<section id="filters"></section>
+<nav id="fams"></nav>
+<div id="simbar"><span id="simtxt"></span><button id="simall">Tout sélectionner</button><button id="simback">Retour au mur</button></div>
+<main id="wall"></main>
+<div id="graph"><canvas id="cv"></canvas><div id="hint">Glisser pour se déplacer, molette pour zoomer, clic : la fiche, Maj + clic : ajouter au moodboard.</div></div>
+<div id="bar"><span class="msg" id="selmsg"></span><button class="alt" id="bsim">Images similaires</button><select id="btarget"><option value="">Nouveau moodboard</option></select><input id="bname" placeholder="nom du moodboard"><button id="bmake">Créer le moodboard</button><button class="ghost" id="bclear">Vider la sélection</button><span class="msg" id="bres"></span></div>
+<div id="toast"><span id="toastmsg"></span><button id="undo">Annuler</button></div>
+<aside id="side"><button id="close">×</button><div id="sideBody"></div></aside>
+<script>
+/* i18n: the UI is written in French; any other browser language gets English. ?lang=en|fr forces it. */
+const LANG = (new URLSearchParams(location.search).get("lang") || navigator.language || "en").slice(0, 2) === "fr" ? "fr" : "en";
+document.documentElement.lang = LANG;
+const EN_EXACT = {
+  "Mur": "Wall", "Familles": "Families", "Filtres": "Filters", "Plus récentes": "Newest", "Plus anciennes": "Oldest",
+  "Par couleur": "By color", "Par titre": "By title", "Par tableau": "By board", "Par famille": "By family",
+  "Images similaires": "Similar images", "Nouveau moodboard": "New moodboard", "Créer le moodboard": "Create moodboard",
+  "Ajouter": "Add", "Vider la sélection": "Clear selection", "Tout sélectionner": "Select all", "Retour au mur": "Back to the wall",
+  "Annuler": "Undo", "Supprimer": "Delete", "Ouvrir dans Obsidian": "Open in Obsidian", "Retirer du moodboard": "Remove from moodboard",
+  "Ajouter au moodboard": "Add to moodboard", "Effacer les filtres": "Clear filters", "Toutes": "All", "Doublons": "Duplicates",
+  "doublons": "duplicates", "pas encore classées": "not classified yet", "Garder la verte, supprimer les autres": "Keep the green one, delete the others",
+  "Remise en place": "Restored", "Création…": "Creating…", "Aucune image.": "No image.", "à garder": "keep", "Échec de l'annulation": "Undo failed",
+  "Type": "Type", "Technique": "Technique", "Ce que ça montre": "What it shows", "Couleur": "Color", "Température": "Temperature",
+  "Photographie": "Photography", "Cinématique": "Cinematic", "Peinture": "Painting", "Graphisme & typo": "Graphic design & type",
+  "Collage & mix média": "Collage & mixed media", "Sculpture & installation": "Sculpture & installation",
+  "Encre": "Ink", "Aquarelle": "Watercolor", "Huile": "Oil", "Acrylique": "Acrylic", "Crayon & dessin": "Pencil & drawing", "Marqueur": "Marker",
+  "Mix média": "Mixed media", "Risographie": "Risograph", "Sérigraphie": "Screen print", "Gravure": "Printmaking", "Trame & halftone": "Halftone",
+  "Argentique": "Film", "Vectoriel": "Vector", "Peinture numérique": "Digital painting", "Rendu 3D": "3D render", "Généré par IA": "AI-generated",
+  "Abstrait": "Abstract", "Géométrique": "Geometric", "Formes organiques": "Organic shapes", "Personne": "People", "Mode": "Fashion",
+  "Paysage & nature": "Landscape & nature", "Architecture & intérieur": "Architecture & interiors", "Objet & nature morte": "Objects & still life",
+  "Typographie": "Typography", "Données": "Data", "Noir et blanc": "Black and white", "Noir": "Black", "Blanc & crème": "White & cream",
+  "Gris": "Grey", "Brun": "Brown", "Rouge": "Red", "Jaune": "Yellow", "Vert": "Green", "Bleu": "Blue", "Rose": "Pink", "Chaud": "Warm",
+  "Froid": "Cool", "Neutre": "Neutral", "Ouvre la galerie par": "Open the gallery at", "pour créer un moodboard.": "to create a moodboard.",
+  "dans": "in", "Trier": "Sort", "Chercher : titre, style, ambiance, tableau": "Search: title, style, mood, board",
+  "nom du moodboard": "moodboard name", "Supprimer (corbeille du vault)": "Delete (vault trash)",
+  "Pas encore classées par le modèle : elles rejoignent une famille au prochain passage.": "Not classified by the model yet: they join a family after the next pass.",
+  "Glisser pour se déplacer, molette pour zoomer, clic : la fiche, Maj + clic : ajouter au moodboard.": "Drag to move, scroll to zoom, click: the note, Shift + click: add to the moodboard.",
+};
+const EN_RE = [
+  [/^Filtres \((\d+)\)$/, "Filters ($1)"], [/^(\d+) image\(s\) choisie\(s\)$/, "$1 image(s) picked"],
+  [/^Sans sélection : les (\d+) premières du filtre$/, "No selection: the first $1 of the filter"],
+  [/^(\d+) images proches de (\d+) image\(s\), les plus proches d'abord$/, "$1 images close to $2 image(s), closest first"],
+  [/^Aucune image proche trouvée.*$/, "No close image found (images not classified yet have no neighbours)."],
+  [/^(\d+) image\(s\) mise\(s\) à la corbeille du vault$/, "$1 image(s) moved to the vault trash"],
+  [/^(\d+) groupes d'images identiques ou presque\..*$/, "$1 groups of identical or near-identical images. The green one is kept (classified, larger, older)."],
+  [/^Supprimer les (\d+) copies identiques à l'octet près$/, "Delete the $1 byte-identical copies"],
+  [/^Mettre (\d+) copies identiques à la corbeille du vault \? \(réversible\)$/, "Move $1 identical copies to the vault trash? (reversible)"],
+  [/^Identiques · (\d+) images$/, "Identical · $1 images"], [/^Très proches, à vérifier · (\d+) images$/, "Very close, check first · $1 images"],
+  [/^Famille : (.*)$/, "Family: $1"], [/^Ajouter à : (.*)$/, "Add to: $1"], [/^Style : (.*)$/, "Style: $1"],
+  [/^Ambiance : (.*)$/, "Mood: $1"], [/^Tableau : (.*)$/, "Board: $1"], [/^(\d+) ajoutée\(s\)$/, "$1 added"],
+  [/^, (\d+) déjà dedans$/, ", $1 already in"], [/^Échec : (.*)$/, "Failed: $1"],
+];
+function tr(t) {
+  if (LANG === "fr" || !t) return t;
+  const k = t.trim(); if (!k) return t;
+  let out = EN_EXACT[k];
+  if (out === undefined) for (const [re, rep] of EN_RE) if (re.test(k)) { out = k.replace(re, rep); break; }
+  return out === undefined ? t : t.replace(k, out);
+}
+function trNode(root) {
+  if (LANG === "fr") return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n; (n = w.nextNode());) { const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+  (root.querySelectorAll ? root.querySelectorAll("[title],[placeholder]") : []).forEach(e => {
+    for (const a of ["title", "placeholder"]) if (e.hasAttribute(a)) { const v = tr(e.getAttribute(a)); if (v !== e.getAttribute(a)) e.setAttribute(a, v); }
+  });
+}
+if (LANG !== "fr") {
+  addEventListener("DOMContentLoaded", () => {
+    trNode(document.body);
+    new MutationObserver(ms => ms.forEach(m => {
+      if (m.type === "characterData") { const v = tr(m.target.nodeValue); if (v !== m.target.nodeValue) m.target.nodeValue = v; }
+      m.addedNodes.forEach(n => n.nodeType === 3 ? (n.nodeValue = tr(n.nodeValue)) : n.nodeType === 1 && trNode(n));
+    })).observe(document.body, { childList: true, subtree: true, characterData: true });
+  });
+}
+</script>
+<script src="data.js"></script>
+<script>
+const D = window.INSPI, items = D.items, famById = {};
+const hue = i => `hsl(${(i * 137.508) % 360} 55% 62%)`;
+D.families.forEach((f, k) => { f.color = hue(k); famById[f.id] = f; });
+let fam = null, query = "", mode = "wall";
+const FACETS = [["ty", "Type"], ["te", "Technique"], ["su", "Ce que ça montre"], ["co", "Couleur"], ["tp", "Température"]];
+const SW = { "Noir": "#111", "Blanc & crème": "#f3eee2", "Gris": "#8a8a8a", "Brun": "#6d4c41", "Beige": "#d9c7a3", "Rouge": "#d32f2f", "Orange": "#f57c00", "Jaune": "#fdd835", "Vert": "#388e3c", "Bleu": "#1e66d0", "Violet": "#7b3fa0", "Rose": "#ec6fa0" };
+const sel = Object.fromEntries(FACETS.map(([k]) => [k, new Set()]));
+const picked = new Set();
+let simTo = null, simList = [], dupMode = false, sortBy = "new";
+const gone = new Set();
+function hueKey(it) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(it.c || ""); if (!m) return 999;
+  const n = parseInt(m[1], 16), r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2;
+  if (d < 0.08) return 400 + (1 - l) * 100;
+  let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return ((h * 60) + 360) % 360;
+}
+function sorted(list) {
+  const a = list.slice(), cmp = {
+    new: (x, y) => y.d - x.d, old: (x, y) => x.d - y.d, color: (x, y) => hueKey(x) - hueKey(y),
+    title: (x, y) => x.t.localeCompare(y.t, "fr"), board: (x, y) => (x.b || "~").localeCompare(y.b || "~", "fr") || y.d - x.d,
+    fam: (x, y) => (x.f < 0 ? 1e9 : x.f) - (y.f < 0 ? 1e9 : y.f),
+  }[sortBy];
+  return a.sort(cmp);
+}
+function liveDups() {
+  return D.dups.map(g => ({ ...g, ids: g.ids.filter(i => !gone.has(i)) })).filter(g => g.ids.length > 1);
+}
+let lastBatch = null;
+async function del(list) {
+  const r = await fetch("/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notes: list.map(i => i.r) }) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status);
+  list.forEach(i => { gone.add(i.i); picked.delete(i.i); });
+  lastBatch = { batch: j.batch, ids: list.map(i => i.i) };
+  toast(`${j.notes} image(s) mise(s) à la corbeille du vault`);
+  render();
+}
+function toast(msg, undo = true) {
+  $("toastmsg").textContent = msg; $("undo").style.display = undo ? "" : "none"; $("toast").classList.add("on");
+  clearTimeout(toast.t); toast.t = setTimeout(() => $("toast").classList.remove("on"), 12000);
+}
+const byI = new Map(items.map(it => [it.i, it]));
+function similar(ids) {
+  const score = new Map(), src = new Set(ids);
+  ids.forEach(i => (byI.get(i)?.nb || []).forEach(([j, s]) => { if (!src.has(j)) score.set(j, (score.get(j) || 0) + s); }));
+  return [...score.entries()].sort((a, b) => b[1] - a[1]).map(([j]) => byI.get(j)).filter(Boolean);
+}
+function showSimilar(ids) {
+  simTo = ids; simList = similar(ids);
+  if (mode !== "wall") setMode("wall"); else render();
+  scrollTo(0, 0);
+}
+function facetOk(it) {
+  for (const [k] of FACETS) { const S = sel[k]; if (S.size && !(it.fa?.[k] || []).some(v => S.has(v))) return false; }
+  return true;
+}
+const $ = id => document.getElementById(id);
+
+function matches(it) {
+  if (gone.has(it.i)) return false;
+  if (fam !== null && it.f !== fam) return false;
+  if (!facetOk(it)) return false;
+  if (!query) return true;
+  const fv = it.fa ? Object.values(it.fa).flat().join(" ") : "";
+  const hay = (it.t + " " + it.b + " " + it.s.join(" ") + " " + it.m.join(" ") + " " + fv + " " + (famById[it.f]?.label || "")).toLowerCase();
+  return query.split(/\s+/).every(w => hay.includes(w));
+}
+
+function filters() {
+  const box = $("filters"); box.innerHTML = "";
+  for (const [k, label] of FACETS) {
+    const cnt = {};
+    items.forEach(it => (it.fa?.[k] || []).forEach(v => cnt[v] = (cnt[v] || 0) + 1));
+    const row = document.createElement("div"); row.className = "frow";
+    row.innerHTML = `<b>${label}</b>`;
+    Object.entries(cnt).sort((a, b) => b[1] - a[1]).forEach(([v, n]) => {
+      const c = document.createElement("button");
+      c.className = "chip" + (sel[k].has(v) ? " on" : "");
+      c.innerHTML = (SW[v] ? `<span class="dot" style="background:${SW[v]};border:1px solid #444"></span>` : "") + `${v} <i>${n}</i>`;
+      c.onclick = () => { sel[k].has(v) ? sel[k].delete(v) : sel[k].add(v); render(); };
+      row.appendChild(c);
+    });
+    box.appendChild(row);
+  }
+  const active = FACETS.reduce((a, [k]) => a + sel[k].size, 0);
+  if (active) { const cl = document.createElement("button"); cl.id = "clear"; cl.textContent = "Effacer les filtres"; cl.onclick = () => { FACETS.forEach(([k]) => sel[k].clear()); render(); }; box.appendChild(cl); }
+  $("fbtn").textContent = active ? `Filtres (${active})` : "Filtres";
+  $("fbtn").classList.toggle("on", !!active);
+}
+$("fbtn").onclick = () => { $("filters").classList.toggle("open"); if (mode === "graph") setMode("graph"); };
+
+function chips() {
+  const nav = $("fams"); nav.innerHTML = "";
+  const all = document.createElement("button");
+  all.className = "chip" + (fam === null ? " on" : ""); all.innerHTML = `Toutes <i>${items.length}</i>`;
+  all.onclick = () => { fam = null; render(); }; nav.appendChild(all);
+  D.families.forEach(f => {
+    const b = document.createElement("button");
+    b.className = "chip" + (fam === f.id ? " on" : "");
+    b.innerHTML = `<span class="dot" style="background:${f.color}"></span>${f.label} <i>${f.size}</i>`;
+    b.onclick = () => { fam = fam === f.id ? null : f.id; render(); if (mode === "graph" && fam !== null) focusFam(fam); };
+    nav.appendChild(b);
+  });
+  const nd = liveDups();
+  if (nd.length) {
+    const b = document.createElement("button");
+    b.className = "chip" + (dupMode ? " on" : "");
+    b.innerHTML = `Doublons <i>${nd.reduce((a, g) => a + g.ids.length - 1, 0)}</i>`;
+    b.onclick = () => { dupMode = !dupMode; simTo = null; if (mode !== "wall") setMode("wall"); else render(); };
+    nav.appendChild(b);
+  }
+  const nw = items.filter(i => i.f === -2 && !gone.has(i.i)).length;
+  if (nw) {
+    const b = document.createElement("button");
+    b.className = "chip" + (fam === -2 ? " on" : "");
+    b.innerHTML = `<span class="dot" style="background:#555"></span>pas encore classées <i>${nw}</i>`;
+    b.title = "Pas encore classées par le modèle : elles rejoignent une famille au prochain passage.";
+    b.onclick = () => { fam = fam === -2 ? null : -2; render(); };
+    nav.appendChild(b);
+  }
+}
+
+let shown = [], drawn = 0;
+const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) more(); }, { rootMargin: "1200px" });
+function card(it) {
+  const c = document.createElement("div"); c.className = "card";
+  c.innerHTML = `<button class="pick" title="Ajouter au moodboard">+</button><button class="del" title="Supprimer (corbeille du vault)">×</button><img loading="lazy" src="${it.img}" alt=""><span></span>`;
+  c.querySelector("span").textContent = it.t;
+  if (picked.has(it.i)) c.classList.add("sel");
+  c.querySelector(".pick").onclick = e => { e.stopPropagation(); togglePick(it, c); };
+  c.querySelector(".del").onclick = e => { e.stopPropagation(); del([it]).catch(err => toast("Échec : " + err.message, false)); };
+  c.onclick = () => openSide(it);
+  return c;
+}
+function dupWall() {
+  const w = $("wall"), groups = liveDups();
+  const exact = groups.filter(g => g.exact), extra = exact.reduce((a, g) => a + g.ids.length - 1, 0);
+  const head = document.createElement("div"); head.className = "grp";
+  head.innerHTML = `<div class="gh">${groups.length} groupes d'images identiques ou presque. La verte est celle qu'on garde (classée, plus grande, plus ancienne).</div>`;
+  if (extra) {
+    const b = document.createElement("button"); b.id = "dupall"; b.textContent = `Supprimer les ${extra} copies identiques à l'octet près`;
+    b.onclick = () => { if (confirm(tr(`Mettre ${extra} copies identiques à la corbeille du vault ? (réversible)`))) del(exact.flatMap(g => g.ids.slice(1).map(i => byI.get(i)))).catch(err => toast("Échec : " + err.message, false)); };
+    head.appendChild(b);
+  }
+  w.appendChild(head);
+  groups.forEach((g, k) => {
+    const box = document.createElement("div"); box.className = "grp";
+    const gh = document.createElement("div"); gh.className = "gh";
+    gh.innerHTML = `<span>${g.exact ? "Identiques" : "Très proches, à vérifier"} · ${g.ids.length} images</span>`;
+    const b = document.createElement("button"); b.textContent = "Garder la verte, supprimer les autres";
+    b.onclick = () => del(g.ids.slice(1).map(i => byI.get(i))).catch(err => toast("Échec : " + err.message, false));
+    gh.appendChild(b); box.appendChild(gh);
+    g.ids.forEach((i, n) => { const c = card(byI.get(i)); if (n === 0) { c.classList.add("keep"); c.insertAdjacentHTML("beforeend", `<span class="tag">à garder</span>`); } box.appendChild(c); });
+    w.appendChild(box);
+  });
+}
+function wall() {
+  const w = $("wall"); w.innerHTML = ""; drawn = 0;
+  if (dupMode) { $("simbar").classList.remove("on"); return dupWall(); }
+  if (simTo) {
+    shown = simList.filter(it => facetOk(it)).slice(0, 80);
+    $("simbar").classList.add("on");
+    $("simtxt").textContent = shown.length ? `${shown.length} images proches de ${simTo.length} image(s), les plus proches d'abord` : "Aucune image proche trouvée (les images pas encore classées n'ont pas de voisines).";
+  } else { $("simbar").classList.remove("on"); shown = sorted(items.filter(matches)); }
+  more();
+}
+function more() {
+  const w = $("wall"), frag = document.createDocumentFragment();
+  shown.slice(drawn, drawn + 120).forEach(it => {
+    frag.appendChild(card(it));
+  });
+  drawn = Math.min(drawn + 120, shown.length);
+  const old = w.querySelector(".sentinel"); if (old) old.remove();
+  w.appendChild(frag);
+  if (drawn < shown.length) { const s = document.createElement("div"); s.className = "sentinel"; s.style.height = "1px"; w.appendChild(s); io.observe(s); }
+}
+
+function togglePick(it, card) {
+  picked.has(it.i) ? picked.delete(it.i) : picked.add(it.i);
+  if (card) card.classList.toggle("sel", picked.has(it.i));
+  bar();
+}
+function boardSet() {
+  if (picked.size) return items.filter(i => picked.has(i.i));
+  return items.filter(matches).slice(0, 24);
+}
+function bar() {
+  const n = items.filter(matches).length;
+  $("selmsg").textContent = picked.size ? `${picked.size} image(s) choisie(s)` : `Sans sélection : les ${Math.min(24, n)} premières du filtre`;
+  $("bclear").style.display = picked.size ? "" : "none";
+  $("bsim").disabled = !picked.size;
+  const tgt = $("btarget").value;
+  $("bname").style.display = tgt ? "none" : "";
+  $("bmake").textContent = tgt ? "Ajouter" : "Créer le moodboard";
+}
+function slug(t) { return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80); }
+$("sort").onchange = e => { sortBy = e.target.value; render(); };
+$("undo").onclick = async () => {
+  if (!lastBatch) return;
+  const r = await fetch("/restore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ batch: lastBatch.batch }) });
+  if (r.ok) { lastBatch.ids.forEach(i => gone.delete(i)); lastBatch = null; toast("Remise en place", false); render(); }
+  else toast("Échec de l'annulation", false);
+};
+$("bclear").onclick = () => { picked.clear(); render(); };
+$("bsim").onclick = () => { if (picked.size) showSimilar([...picked]); };
+$("simback").onclick = () => { simTo = null; render(); };
+$("simall").onclick = () => { shown.forEach(it => picked.add(it.i)); render(); };
+$("btarget").onchange = () => bar();
+async function loadBoards(selectName) {
+  if (location.protocol === "file:") return;
+  try {
+    const list = await (await fetch("/boards")).json(), sel = $("btarget");
+    sel.innerHTML = `<option value="">Nouveau moodboard</option>` + list.map(b => `<option value="${b.name}">Ajouter à : ${b.name} (${b.images})</option>`).join("");
+    if (selectName) sel.value = selectName;
+    bar();
+  } catch (e) {}
+}
+$("bmake").onclick = async () => {
+  const res = $("bres");
+  if (location.protocol === "file:") { res.innerHTML = `Ouvre la galerie par <a href="/">127.0.0.1</a> pour créer un moodboard.`; return; }
+  const tgt = $("btarget").value;
+  const raw = tgt || $("bname").value.trim() || [query, ...FACETS.flatMap(([k]) => [...sel[k]])].filter(Boolean).join(" ") || "moodboard";
+  const name = tgt || slug(raw) || "moodboard", set = boardSet(), notes = set.map(i => i.r);
+  if (!notes.length) { res.textContent = "Aucune image."; return; }
+  res.textContent = "Création…";
+  try {
+    const r = await fetch("/board", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, title: raw, notes, mode: tgt ? "add" : "new" }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.status);
+    res.innerHTML = (tgt ? `${j.placed} ajoutée(s)` + (j.skipped ? `, ${j.skipped} déjà dedans` : "") : `${j.placed} images`) + ` dans <b></b> · <a href="${j.open}">Ouvrir dans Obsidian</a>`;
+    res.querySelector("b").textContent = name;
+    const ids = set.map(i => i.i);
+    picked.clear(); $("bname").value = "";
+    await loadBoards(name);
+    showSimilar(simTo && tgt ? [...new Set([...simTo, ...ids])] : ids);
+  } catch (e) { res.textContent = "Échec : " + e.message; }
+};
+
+function render() {
+  $("count").textContent = dupMode ? "doublons" : items.filter(matches).length + " images";
+  filters(); chips(); bar();
+  if (mode === "wall") wall(); else draw();
+}
+
+function openSide(it) {
+  const f = famById[it.f];
+  const body = $("sideBody");
+  body.innerHTML = `<img src="${it.full}" onerror="this.src='${it.img}'"><h2></h2>
+    <div class="meta">${it.c ? `<span class="sw" style="background:${it.c}"></span>${it.c}` : ""}</div>
+    <div class="meta" id="sStyle"></div><div class="meta" id="sMood"></div><div class="meta" id="sBoard"></div>
+    <div class="row"><a href="${it.o}">Ouvrir dans Obsidian</a>${/^https?:/.test(it.src) ? `<a href="${it.src}" target="_blank" rel="noopener">Source</a>` : ""}
+    ${f ? `<button id="sFam">Famille : ${f.label}</button>` : ""}<button id="sPick"></button><button id="sSim">Images similaires</button><button id="sDel">Supprimer</button></div>`;
+  body.querySelector("h2").textContent = it.t;
+  $("sStyle").textContent = it.s.length ? "Style : " + it.s.join(", ") : "";
+  $("sMood").textContent = it.m.length ? "Ambiance : " + it.m.join(", ") : "";
+  $("sBoard").textContent = it.b ? "Tableau : " + it.b : "";
+  const sp = $("sPick"), upd = () => sp.textContent = picked.has(it.i) ? "Retirer du moodboard" : "Ajouter au moodboard";
+  upd(); sp.onclick = () => { togglePick(it); upd(); render(); };
+  $("sDel").onclick = () => { $("side").classList.remove("open"); del([it]).catch(err => toast("Échec : " + err.message, false)); };
+  $("sSim").onclick = () => { $("side").classList.remove("open"); showSimilar([it.i]); };
+  if (f) $("sFam").onclick = () => { fam = f.id; render(); if (mode === "graph") focusFam(f.id); };
+  $("side").classList.add("open");
+}
+$("close").onclick = () => $("side").classList.remove("open");
+
+/* ---------- graph ---------- */
+const cv = $("cv"), ctx = cv.getContext("2d"), cache = new Map();
+let W = 0, H = 0, dpr = 1, view = { x: 0, y: 0, s: 1 };
+const placed = items.filter(i => i.f !== -2);
+const xs = placed.map(i => i.x), ys = placed.map(i => i.y);
+const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+const SPAN = 4000;
+placed.forEach(it => { it.gx = (it.x - minX) / ((maxX - minX) || 1) * SPAN; it.gy = (it.y - minY) / ((maxY - minY) || 1) * SPAN; });
+const byIdx = new Map(placed.map(it => [it.i, it]));
+const cent = {};
+D.families.forEach(f => {
+  const m = items.filter(i => i.f === f.id);
+  cent[f.id] = { x: m.reduce((a, i) => a + i.gx, 0) / m.length, y: m.reduce((a, i) => a + i.gy, 0) / m.length };
+});
+function resize() { dpr = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; draw(); }
+function fit() { const s = Math.min(W, H) / (SPAN * 1.1); view = { s, x: W / 2 - SPAN / 2 * s, y: H / 2 - SPAN / 2 * s }; }
+function focusFam(id) { const c = cent[id]; if (!c) return; const s = Math.max(view.s, 0.6); view = { s, x: W / 2 - c.x * s, y: H / 2 - c.y * s }; draw(); }
+function img(it) {
+  let im = cache.get(it.i);
+  if (!im) { im = new Image(); im.onload = () => requestDraw(); im.src = it.img; cache.set(it.i, im); }
+  return im;
+}
+let pending = false; function requestDraw() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; draw(); }); } }
+const BASE = 120;
+function draw() {
+  if (mode !== "graph") return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const size = BASE * view.s, vis = placed.filter(matches), set = new Set(vis.map(i => i.i));
+  ctx.lineWidth = 1; ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.beginPath();
+  if (view.s > 0.25) for (const [a, b] of D.edges) {
+    if (!set.has(a) || !set.has(b)) continue;
+    const p = byIdx.get(a), q = byIdx.get(b);
+    ctx.moveTo(p.gx * view.s + view.x, p.gy * view.s + view.y); ctx.lineTo(q.gx * view.s + view.x, q.gy * view.s + view.y);
+  }
+  ctx.stroke();
+  for (const it of vis) {
+    const x = it.gx * view.s + view.x, y = it.gy * view.s + view.y;
+    if (x < -size || y < -size || x > W + size || y > H + size) continue;
+    const col = famById[it.f]?.color || "#555";
+    if (size < 7) { ctx.fillStyle = col; ctx.fillRect(x - 2, y - 2, 4, 4); continue; }
+    const im = img(it);
+    if (im.complete && im.naturalWidth) {
+      const r = im.naturalWidth / im.naturalHeight, w = r >= 1 ? size : size * r, h = r >= 1 ? size / r : size;
+      ctx.drawImage(im, x - w / 2, y - h / 2, w, h);
+      ctx.strokeStyle = picked.has(it.i) ? "#d9b98c" : col; ctx.lineWidth = picked.has(it.i) ? Math.max(3, size / 12) : Math.max(1, size / 30); ctx.strokeRect(x - w / 2, y - h / 2, w, h);
+    } else { ctx.fillStyle = col; ctx.globalAlpha = .35; ctx.fillRect(x - size / 2, y - size / 2, size, size); ctx.globalAlpha = 1; }
+  }
+  ctx.font = "600 13px -apple-system,sans-serif"; ctx.textAlign = "center";
+  for (const f of D.families) {
+    if (fam !== null && f.id !== fam) continue;
+    const c = cent[f.id], x = c.x * view.s + view.x, y = c.y * view.s + view.y;
+    const t = f.label, w = ctx.measureText(t).width + 16;
+    ctx.fillStyle = "rgba(18,18,20,.82)"; ctx.fillRect(x - w / 2, y - 11, w, 22);
+    ctx.fillStyle = f.color; ctx.fillText(t, x, y + 4);
+  }
+}
+let drag = null, moved = false;
+cv.onmousedown = e => { drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; moved = false; cv.classList.add("drag"); };
+addEventListener("mousemove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true; view.x = drag.vx + dx; view.y = drag.vy + dy; requestDraw(); });
+addEventListener("mouseup", e => {
+  if (drag && !moved) {
+    const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, half = BASE * view.s / 2;
+    const hit = placed.filter(matches).reverse().find(it => Math.abs(it.gx * view.s + view.x - mx) < half && Math.abs(it.gy * view.s + view.y - my) < half);
+    if (hit && (e.altKey || e.shiftKey)) { togglePick(hit); requestDraw(); }
+    else if (hit) openSide(hit);
+  }
+  drag = null; cv.classList.remove("drag");
+});
+cv.addEventListener("wheel", e => {
+  e.preventDefault(); const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const k = Math.exp(-e.deltaY * 0.0015), s = Math.min(6, Math.max(0.05, view.s * k));
+  view.x = mx - (mx - view.x) * (s / view.s); view.y = my - (my - view.y) * (s / view.s); view.s = s; requestDraw();
+}, { passive: false });
+addEventListener("resize", () => { if (mode === "graph") resize(); });
+
+function setMode(m) {
+  mode = m; $("tWall").classList.toggle("on", m === "wall"); $("tGraph").classList.toggle("on", m === "graph");
+  $("wall").style.display = m === "wall" ? "" : "none"; $("graph").style.display = m === "graph" ? "block" : "none";
+  if (m === "graph") { const top = $("fams").getBoundingClientRect().bottom; $("graph").style.top = top + "px"; resize(); if (!view.set) { fit(); view.set = true; } }
+  render();
+}
+$("tWall").onclick = () => setMode("wall");
+$("tGraph").onclick = () => setMode("graph");
+$("q").oninput = e => { query = e.target.value.trim().toLowerCase(); render(); };
+loadBoards();
+if (location.hash.includes("doublons")) dupMode = true;
+if (location.hash.includes("filtres")) $("filters").classList.add("open");
+if (location.hash.includes("familles")) setMode("graph"); else render();
+</script>
+</body>
+</html>

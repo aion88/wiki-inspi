@@ -5,6 +5,8 @@
   inspi doctor
   inspi search "dark blue" [--color #hex|name] [--style x] [--mood x] [--limit N] [--json]
   inspi board "ferrofluid" --name demo-ferrofluid [same filters]
+  inspi map [--no-open]     rebuild the gallery (wall, families, filters) and open it
+  inspi serve               run the gallery server on 127.0.0.1 (launchd does this for you)
 
 Vault: from ~/.config/wiki-inspi/config.json (override: INSPI_VAULT). Library notes only.
 """
@@ -47,6 +49,9 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("open", help="open the hub in Obsidian")
     sub.add_parser("doctor", help="check every link of the chain and print the fix for what is missing")
+    m = sub.add_parser("map", help="rebuild the gallery page and open it in the browser")
+    m.add_argument("--no-open", action="store_true")
+    sub.add_parser("serve", help="serve the gallery on 127.0.0.1 (map_port)")
     s = sub.add_parser("search", help="search captures")
     add_filters(s)
     s.add_argument("--json", action="store_true")
@@ -58,6 +63,18 @@ def main(argv=None):
     if a.cmd == "doctor":
         import doctor
         return doctor.main()
+    if a.cmd == "map":
+        import config as _config
+        import inspi_map
+
+        print(inspi_map.build(Path(L.VAULT)))
+        if a.no_open:
+            return 0
+        return subprocess.call(["open", f"http://127.0.0.1:{_config.load().get('map_port', 18766)}/"])
+    if a.cmd == "serve":
+        import inspi_serve
+
+        return inspi_serve.main()
     if a.cmd == "open":
         uri = f"obsidian://open?vault={quote(Path(L.VAULT).name)}&file={quote('_Wiki Inspi')}"
         return subprocess.call(["open", uri])

@@ -95,4 +95,8 @@ while [ "$pass" -lt "$MAX_PASSES" ]; do
   fi
   break
 done
+# Refresh the gallery page (inspi map). Best-effort: a failure is logged, never fatal.
+if [ -z "${INSPI_NO_MAP:-}" ]; then
+  "$PYTHON" "$(dirname "$0")/../bin/inspi" map --no-open >/dev/null 2>>"$LOG" || log "map: rebuild failed"
+fi
 exit "$final"

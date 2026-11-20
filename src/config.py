@@ -25,6 +25,7 @@ KEYCHAIN_SERVICE = "wiki-inspi-token"  # default; account = the current macOS us
 DEFAULTS: dict = {
     "vault": str(HOME / "Wiki Inspi"),
     "port": 18765,
+    "map_port": 18766,  # the gallery page (inspi map / inspi serve), 127.0.0.1 only
     "token_store": "keychain",  # keychain | file (file: 0600 token_file, for CI and dry runs)
     "token_file": str(HOME / ".config/wiki-inspi/token"),
     "keychain_service": KEYCHAIN_SERVICE,

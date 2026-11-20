@@ -27,7 +27,7 @@ verifying each step before the next. Tell them what you are about to run before 
    the downscaled image and page text off the machine; say so.
 3. **Run the installer** from the repo root:
    `./install.sh --vault "<path>" --backend <claude-cli|anthropic-api|ollama> --non-interactive`.
-   It creates the vault skeleton, config, Keychain token, `inspi` command and launchd agents. It
+   It creates the vault skeleton, config, Keychain token, `inspi` command, launchd agents and the Wiki Inspi app. It
    is idempotent. Read its output; it prints the next steps.
 4. **Obsidian.** If `/Applications/Obsidian.app` is missing: if `command -v brew` succeeds and the
    human agrees, run `brew install --cask obsidian`; otherwise point them to https://obsidian.md.
@@ -74,7 +74,8 @@ Give ONE step, wait for the human to say it is done, verify (command or question
 6. **Classifier check.** Confirm the backend works with one capture: the note moves from `Inbox/`
    to `Library/` with `style`, `palette` and `main_color` filled. If not: `enrich.log`, then
    `inspi doctor`.
-7. **Finish.** Show them `inspi search "<word>"` and `inspi board "<word>" --name test`, and that
+7. **Gallery.** Ask them to open **Wiki Inspi** from Applications (installed by `install.sh`). Verify: the page loads on `http://127.0.0.1:18766/` and shows their first capture. If the app shows a notification instead, run `inspi doctor` (agent `map`).
+8. **Finish.** Show them `inspi search "<word>"` and `inspi board "<word>" --name test`, and that
    `inspi doctor` is the first thing to run when something stops working.
 
 ## If something fails

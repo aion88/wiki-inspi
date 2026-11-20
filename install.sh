@@ -44,13 +44,13 @@ PY="$(command -v python3 || true)"
 [ -n "$PY" ] || die "python3 not found. Install Python 3.10+ (https://www.python.org or brew install python)."
 "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' || die "Python 3.10+ required (found $("$PY" -V))."
 if [ -x "$VENV/bin/python" ]; then PY="$VENV/bin/python"; fi
-if ! "$PY" -c 'import PIL, yaml, anthropic' 2>/dev/null; then
-  say "Installing dependencies (Pillow, PyYAML, anthropic) into a private venv: $VENV"
+if ! "$PY" -c 'import PIL, yaml, anthropic, networkx' 2>/dev/null; then
+  say "Installing dependencies (Pillow, PyYAML, anthropic, networkx) into a private venv: $VENV"
   "$PY" -m venv "$VENV"
   "$VENV/bin/python" -m pip install --quiet -r "$REPO/requirements.txt"
   PY="$VENV/bin/python"
 fi
-"$PY" -c 'import PIL, yaml, anthropic' || die "dependencies still missing after install."
+"$PY" -c 'import PIL, yaml, anthropic, networkx' || die "dependencies still missing after install."
 say "python:  $PY ($("$PY" -V))"
 
 # ---- 2. Vault path
@@ -146,13 +146,17 @@ PYEOF
 }
 if [ "$LAUNCHD" = 1 ]; then
   AGENTS="$HOME/Library/LaunchAgents"; mkdir -p "$AGENTS"
-  for name in receiver watcher enricher; do
+  for name in receiver watcher enricher map; do
     plist="$AGENTS/$LABEL_PREFIX.$name.plist"
     render "$REPO/launchd/$LABEL_PREFIX.$name.plist.template" "$plist"
     launchctl bootout "gui/$(id -u)/$LABEL_PREFIX.$name" 2>/dev/null || true
     launchctl bootstrap "gui/$(id -u)" "$plist"
     say "launchd: loaded $LABEL_PREFIX.$name"
   done
+  "$PY" "$REPO/bin/inspi" map --no-open >/dev/null 2>&1 || say "gallery: first build failed, run: inspi map"
+  MAP_PORT="$("$PY" "$REPO/src/config.py" get map_port 2>/dev/null || echo 18766)"
+  APP="$("$REPO/scripts/make_app.sh" --label "$LABEL_PREFIX.map" --url "http://127.0.0.1:$MAP_PORT/")"
+  say "app: $APP (drag it to the Dock; it opens the gallery on http://127.0.0.1:$MAP_PORT/)"
 else
   say "launchd: skipped (--no-launchd). Run the receiver by hand: $PY $REPO/src/receiver.py"
 fi
