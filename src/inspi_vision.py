@@ -21,6 +21,8 @@ REV, DIM = 2, 768
 def binary() -> Path:
     if not BIN.exists() or BIN.stat().st_mtime < SRC.stat().st_mtime:
         BIN.parent.mkdir(parents=True, exist_ok=True)
+        # without the Command Line Tools, /usr/bin/swiftc opens the macOS install dialog on every call
+        subprocess.run(["xcode-select", "-p"], check=True, capture_output=True)
         subprocess.run(["swiftc", "-O", str(SRC), "-o", str(BIN)], check=True, capture_output=True)
     return BIN
 
