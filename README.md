@@ -59,6 +59,8 @@ git clone <this repo> wiki-inspi && cd wiki-inspi
 
 Options: `--vault PATH --port N --backend claude-cli|anthropic-api|ollama --drop-folder PATH --extension-id ID --non-interactive --no-launchd --no-keychain` (the last stores the token in a 0600 file instead of the Keychain, for CI and dry runs). The script is idempotent; it never overwrites your notes, taxonomy or existing config values. It installs missing Python dependencies (Pillow, PyYAML, anthropic, networkx, numpy) into a private venv, creates the vault skeleton, writes the config, stores a token in the macOS Keychain, installs the `inspi` command in `~/.local/bin` and three launchd agents (`io.github.wiki-inspi.receiver`, `.watcher`, `.enricher`). `./uninstall.sh` removes them (your vault is left alone).
 
+The `inspi` command lands in `~/.local/bin`: add it to your `PATH` if `inspi` is not found (`export PATH="$HOME/.local/bin:$PATH"` in your shell profile). Until the extension is paired, the plugins are installed and the launchd agents loaded, `inspi doctor` reports MISSING lines; that is expected, each one prints its fix.
+
 Then, once:
 
 1. `chrome://extensions` > Developer mode > Load unpacked > the repo's `extension/` folder.
@@ -102,7 +104,7 @@ inspi doctor                                   # check every link, print the fix
 
 ### The gallery
 
-`install.sh` (unless `--no-launchd`) adds a launchd agent (`io.github.wiki-inspi.map`) that serves the gallery on `http://127.0.0.1:18766/` and a **Wiki Inspi** app (in `/Applications`, or `~/Applications` if that is not writable) that opens it, starting the server first if needed. The page is rebuilt after each classification pass. Rebuild it by hand with `inspi map` (`inspi map --vision-limit N` reads at most N new pictures per run; the launchd rebuild uses 50, so a big library fills in over a few passes); rebuild the app with `scripts/make_app.sh`.
+`install.sh` (unless `--no-launchd`) adds a launchd agent (`io.github.wiki-inspi.map`) that serves the gallery on `http://127.0.0.1:18766/` and a **Wiki Inspi** app (in `/Applications`, or `~/Applications` if that is not writable) that opens it, starting the server first if needed. The page is rebuilt after each classification pass. Rebuild it by hand with `inspi map` (`inspi map --vision-limit N` reads at most N new pictures per run; the launchd rebuild uses 50, so a big library fills in over a few passes); rebuild the app with `scripts/make_app.sh`. Installed with `--no-launchd`? Nothing serves the page for you: run `inspi serve` in a terminal and open `http://127.0.0.1:18766/` (or run `inspi map` once the server is up).
 
 - **Wall**: every image in columns, with search, sort (newest, oldest, color, title, board, family) and filters by type (photography, cinematic, illustration...), technique (ink, watercolor, mixed media...), what it shows (abstract, geometric, people...), color and temperature. Filters are keyword rules over what the classifier wrote, recomputed on every build, no extra model call.
 - **Families**: a map where close images attract (same style, technique, mood, neighbouring colors). Families are communities in a nearest-neighbour graph (TF-IDF over the classification fields plus Lab color distance, Louvain).
