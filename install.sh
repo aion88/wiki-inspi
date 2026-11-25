@@ -154,7 +154,7 @@ if [ "$LAUNCHD" = 1 ]; then
     launchctl bootstrap "gui/$(id -u)" "$plist"
     say "launchd: loaded $LABEL_PREFIX.$name"
   done
-  "$PY" "$REPO/bin/inspi" map --no-open >/dev/null 2>&1 || say "gallery: first build failed, run: inspi map"
+  "$PY" "$REPO/bin/inspi" map --no-open --vision-limit 50 >/dev/null 2>&1 || say "gallery: first build failed, run: inspi map"
   MAP_PORT="$("$PY" "$REPO/src/config.py" get map_port 2>/dev/null || echo 18766)"
   APP="$("$REPO/scripts/make_app.sh" --label "$LABEL_PREFIX.map" --url "http://127.0.0.1:$MAP_PORT/")"
   say "app: $APP (drag it to the Dock; it opens the gallery on http://127.0.0.1:$MAP_PORT/)"

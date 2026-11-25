@@ -4,7 +4,7 @@
 Same matching rules as inspi_filter.js (one fixture file tests both).
 A search with board=true owns Moodboards/auto-<name>.excalidraw.md: created on the first pass, then
 only NEW matches are appended. Every picture ever added is remembered (saved-ledger.json) so a
-picture she removed from the board never comes back. A board edited in the last 2 minutes is skipped
+picture you removed from the board never comes back. A board edited in the last 2 minutes is skipped
 (Excalidraw may hold it open). All writes happen under the vault write lock.
 """
 
