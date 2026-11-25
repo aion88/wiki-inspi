@@ -44,14 +44,15 @@ PY="$(command -v python3 || true)"
 [ -n "$PY" ] || die "python3 not found. Install Python 3.10+ (https://www.python.org or brew install python)."
 "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' || die "Python 3.10+ required (found $("$PY" -V))."
 if [ -x "$VENV/bin/python" ]; then PY="$VENV/bin/python"; fi
-if ! "$PY" -c 'import PIL, yaml, anthropic, networkx' 2>/dev/null; then
-  say "Installing dependencies (Pillow, PyYAML, anthropic, networkx) into a private venv: $VENV"
+if ! "$PY" -c 'import PIL, yaml, anthropic, networkx, numpy' 2>/dev/null; then
+  say "Installing dependencies (Pillow, PyYAML, anthropic, networkx, numpy) into a private venv: $VENV"
   "$PY" -m venv "$VENV"
   "$VENV/bin/python" -m pip install --quiet -r "$REPO/requirements.txt"
   PY="$VENV/bin/python"
 fi
-"$PY" -c 'import PIL, yaml, anthropic, networkx' || die "dependencies still missing after install."
+"$PY" -c 'import PIL, yaml, anthropic, networkx, numpy' || die "dependencies still missing after install."
 say "python:  $PY ($("$PY" -V))"
+xcode-select -p >/dev/null 2>&1 || say "note:    Xcode command line tools not found (no swiftc). The gallery works without it, but \"more like this\" (pixels) and the text read in pictures need it: xcode-select --install"
 
 # ---- 2. Vault path
 DEFAULT_VAULT="$("$PY" "$REPO/src/config.py" get vault)"

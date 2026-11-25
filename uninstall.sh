@@ -16,7 +16,7 @@ for name in receiver watcher enricher map; do
   launchctl bootout "gui/$(id -u)/$LABEL_PREFIX.$name" 2>/dev/null || true
   rm -f "$HOME/Library/LaunchAgents/$LABEL_PREFIX.$name.plist"
 done
-rm -f "$HOME/.local/bin/inspi" "$HOME/.local/state/wiki-inspi/pair-open"
+rm -f "$HOME/.local/bin/inspi" "$HOME/.local/bin/inspi-vision" "$HOME/.local/state/wiki-inspi/pair-open"
 rm -rf "/Applications/Wiki Inspi.app" "$HOME/Applications/Wiki Inspi.app"
 security delete-generic-password -a "${USER:-$(id -un)}" -s "$SERVICE" >/dev/null 2>&1 || true
 rm -rf "$HOME/.local/share/wiki-inspi/venv"

@@ -2,3 +2,4 @@ Pillow>=10
 PyYAML>=6
 anthropic>=0.40
 networkx>=3
+numpy>=1.26

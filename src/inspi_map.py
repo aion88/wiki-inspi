@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -17,6 +18,8 @@ from pathlib import Path
 import networkx as nx
 
 import inspi_facets as F
+import inspi_saved as SV
+import inspi_vision as VI
 import inspilib as L
 
 FIELDS = {  # field -> weight in the similarity
@@ -193,7 +196,7 @@ def thumb(src: Path, out_dir: Path) -> str | None:
     return f"thumbs/{dest.name}"
 
 
-def build(vault: Path = L.VAULT) -> Path:
+def build(vault: Path = L.VAULT, vision_limit: int | None = None) -> Path:
     out = vault / ".wiki-inspi" / "map"
     (out / "thumbs").mkdir(parents=True, exist_ok=True)
     notes = [n for n in L.load_notes(vault) if n["image"]]
@@ -266,13 +269,35 @@ def build(vault: Path = L.VAULT) -> Path:
     ]
     paths = {i: n["image"] for i, n in enumerate(notes)}
     paths.update({len(notes) + j: n["image"] for j, n in enumerate(waiting)})
+    all_notes = notes + waiting
+    # pixels and text, read by macOS Vision (cached by sha1; only new pictures are read)
+    VI.fill(vault, [paths[it["i"]] for it in items], limit=vision_limit)
+    vis = VI.load(vault)
+    vecs_px = []
+    for it in items:
+        sha = VI.sha1(paths[it["i"]]) or ""
+        row = vis.get(sha) or {}
+        it["sha"] = sha
+        it["txt"] = re.sub(r"\s+", " ", row.get("txt") or "").strip()[:400]
+        it["pal"] = all_notes[it["i"]]["colors"][:6]
+        vecs_px.append(VI.vector(row))
+    for it, nb in zip(items, VI.neighbours(vecs_px)):
+        it["vn"] = [[items[j]["i"], s] for j, s in nb]
     data = {"items": items, "edges": edges, "families": families, "dups": dup_groups(items, paths)}
-    (out / "data.js").write_text(
-        "window.INSPI=" + json.dumps(data, ensure_ascii=False) + ";"
-    )
-    (out / "index.html").write_text(
-        (Path(__file__).with_name("inspi_map.html")).read_text()
-    )
+    with SV.write_lock(vault):
+        tmp = out / "data.js.tmp"  # swapped in whole: a reader never sees half a file
+        tmp.write_text("window.INSPI=" + json.dumps(data, ensure_ascii=False) + ";")
+        os.replace(tmp, out / "data.js")
+        (out / "index.html").write_text(
+            (Path(__file__).with_name("inspi_map.html")).read_text()
+        )
+        (out / "inspi_filter.js").write_text(Path(__file__).with_name("inspi_filter.js").read_text())
+        fam_labels = {f["id"]: f["label"] for f in families}
+        try:
+            SV.fill_boards(vault, items, fam_labels, {n["rel"]: n for n in all_notes}, log=True)
+        except Exception as e:  # a broken board must not stop the gallery
+            with (vault / ".wiki-inspi" / "saved.log").open("a") as fh:
+                fh.write(f"error: {e}\n")
     return out / "index.html"
 
 

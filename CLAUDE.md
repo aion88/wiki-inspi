@@ -29,6 +29,9 @@ verifying each step before the next. Tell them what you are about to run before 
    `./install.sh --vault "<path>" --backend <claude-cli|anthropic-api|ollama> --non-interactive`.
    It creates the vault skeleton, config, Keychain token, `inspi` command, launchd agents and the Wiki Inspi app. It
    is idempotent. Read its output; it prints the next steps.
+   If it prints a note that the Xcode command line tools are missing, the gallery still works; offer
+   `xcode-select --install` (a macOS dialog the human must click) to enable "more like this" and text
+   search inside pictures, and ask before running it.
 4. **Obsidian.** If `/Applications/Obsidian.app` is missing: if `command -v brew` succeeds and the
    human agrees, run `brew install --cask obsidian`; otherwise point them to https://obsidian.md.
 5. **Plugins.** Run `python3 scripts/install_plugins.py --vault "<path>"` (uses the interpreter
@@ -74,7 +77,7 @@ Give ONE step, wait for the human to say it is done, verify (command or question
 6. **Classifier check.** Confirm the backend works with one capture: the note moves from `Inbox/`
    to `Library/` with `style`, `palette` and `main_color` filled. If not: `enrich.log`, then
    `inspi doctor`.
-7. **Gallery.** Ask them to open **Wiki Inspi** from Applications (installed by `install.sh`; with `--no-launchd` run `inspi map --no-open`, then `scripts/make_app.sh`, and keep `inspi serve` running in its own terminal). Verify: the page loads on `http://127.0.0.1:18766/` and shows their first capture. If the app shows a notification instead, run `inspi doctor` (agent `map`).
+7. **Gallery.** Ask them to open **Wiki Inspi** from Applications (installed by `install.sh`; with `--no-launchd` run `inspi map --no-open`, then `scripts/make_app.sh`, and keep `inspi serve` running in its own terminal). Verify: the page loads on `http://127.0.0.1:18766/` and shows their first capture. Mention the extras: **More like this** (select an image), color picker, saved searches (optionally a board that fills itself), and `/today` for a picture of the day. The first build compiles a small Swift helper and reads pictures one by one, so a big library fills in over several passes; `inspi map --vision-limit N` caps one run. If the app shows a notification instead, run `inspi doctor` (agent `map`).
 8. **Finish.** Show them `inspi search "<word>"` and `inspi board "<word>" --name test`, and that
    `inspi doctor` is the first thing to run when something stops working.
 

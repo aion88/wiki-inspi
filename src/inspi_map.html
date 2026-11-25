@@ -73,13 +73,20 @@ canvas.drag{cursor:grabbing}
 #simbar.on{display:flex}
 #simbar button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
 #bar a{color:var(--acc)}
+.crow input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;background:none;padding:0;cursor:pointer}
+.crow input[type=range]{width:140px}
+.crow .note,.srow .note{font-size:11px;color:var(--mute)}
+.srow input[type=text]{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font:inherit;font-size:12px;width:170px}
+.srow button,.crow button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}
+.chip.saved{border-style:dashed}
+.chip .x{margin-left:4px;color:var(--mute);cursor:pointer}
 </style>
 </head>
 <body>
 <header>
   <h1>Wiki Inspi</h1>
   <div class="tabs"><button id="tWall" class="on">Mur</button> <button id="tGraph">Familles</button></div>
-  <input id="q" type="search" placeholder="Chercher : titre, style, ambiance, tableau">
+  <input id="q" type="search" placeholder="Chercher : titre, style, ambiance, tableau, texte dans l'image">
   <span class="count" id="count"></span>
   <select id="sort" title="Trier"><option value="new">Plus récentes</option><option value="old">Plus anciennes</option><option value="color">Par couleur</option><option value="title">Par titre</option><option value="board">Par tableau</option><option value="fam">Par famille</option></select>
   <button id="fbtn" class="chip">Filtres</button>
@@ -89,7 +96,7 @@ canvas.drag{cursor:grabbing}
 <div id="simbar"><span id="simtxt"></span><button id="simall">Tout sélectionner</button><button id="simback">Retour au mur</button></div>
 <main id="wall"></main>
 <div id="graph"><canvas id="cv"></canvas><div id="hint">Glisser pour se déplacer, molette pour zoomer, clic : la fiche, Maj + clic : ajouter au moodboard.</div></div>
-<div id="bar"><span class="msg" id="selmsg"></span><button class="alt" id="bsim">Images similaires</button><select id="btarget"><option value="">Nouveau moodboard</option></select><input id="bname" placeholder="nom du moodboard"><button id="bmake">Créer le moodboard</button><button class="ghost" id="bclear">Vider la sélection</button><span class="msg" id="bres"></span></div>
+<div id="bar"><span class="msg" id="selmsg"></span><button class="alt" id="bsim">Plus comme ça</button><select id="btarget"><option value="">Nouveau moodboard</option></select><input id="bname" placeholder="nom du moodboard"><button id="bmake">Créer le moodboard</button><button class="ghost" id="bclear">Vider la sélection</button><span class="msg" id="bres"></span></div>
 <div id="toast"><span id="toastmsg"></span><button id="undo">Annuler</button></div>
 <aside id="side"><button id="close">×</button><div id="sideBody"></div></aside>
 <script>
@@ -99,7 +106,12 @@ document.documentElement.lang = LANG;
 const EN_EXACT = {
   "Mur": "Wall", "Familles": "Families", "Filtres": "Filters", "Plus récentes": "Newest", "Plus anciennes": "Oldest",
   "Par couleur": "By color", "Par titre": "By title", "Par tableau": "By board", "Par famille": "By family",
-  "Images similaires": "Similar images", "Nouveau moodboard": "New moodboard", "Créer le moodboard": "Create moodboard",
+  "Images similaires": "Similar images", "Plus comme ça": "More like this", "Même style": "Same style",
+  "Couleur précise": "Exact color", "marge": "tolerance", "Appliquer": "Apply", "Retirer la couleur": "Remove color",
+  "Les images pas encore classées n'ont pas de couleur : elles sortent de ce filtre.": "Images not classified yet have no color: this filter leaves them out.",
+  "Enregistrer cette recherche": "Save this search", "nom de la recherche": "search name", "Tableau qui se remplit tout seul": "Board that fills itself",
+  "Enregistrer": "Save", "Recherches :": "Searches:", "Retirer cette recherche": "Remove this search", "Recherche enregistrée": "Search saved",
+  "Chercher : titre, style, ambiance, tableau, texte dans l'image": "Search: title, style, mood, board, text in the picture", "Nouveau moodboard": "New moodboard", "Créer le moodboard": "Create moodboard",
   "Ajouter": "Add", "Vider la sélection": "Clear selection", "Tout sélectionner": "Select all", "Retour au mur": "Back to the wall",
   "Annuler": "Undo", "Supprimer": "Delete", "Ouvrir dans Obsidian": "Open in Obsidian", "Retirer du moodboard": "Remove from moodboard",
   "Ajouter au moodboard": "Add to moodboard", "Effacer les filtres": "Clear filters", "Toutes": "All", "Doublons": "Duplicates",
@@ -125,6 +137,8 @@ const EN_RE = [
   [/^Filtres \((\d+)\)$/, "Filters ($1)"], [/^(\d+) image\(s\) choisie\(s\)$/, "$1 image(s) picked"],
   [/^Sans sélection : les (\d+) premières du filtre$/, "No selection: the first $1 of the filter"],
   [/^(\d+) images proches de (\d+) image\(s\), les plus proches d'abord$/, "$1 images close to $2 image(s), closest first"],
+  [/^(\d+) images qui ressemblent à (\d+) image\(s\), les plus proches d'abord$/, "$1 images that look like $2 image(s), closest first"],
+  [/^Le tableau auto-(.*) se remplira au prochain passage$/, "Board auto-$1 will fill on the next pass"],
   [/^Aucune image proche trouvée.*$/, "No close image found (images not classified yet have no neighbours)."],
   [/^(\d+) image\(s\) mise\(s\) à la corbeille du vault$/, "$1 image(s) moved to the vault trash"],
   [/^(\d+) groupes d'images identiques ou presque\..*$/, "$1 groups of identical or near-identical images. The green one is kept (classified, larger, older)."],
@@ -161,6 +175,7 @@ if (LANG !== "fr") {
 }
 </script>
 <script src="data.js"></script>
+<script src="inspi_filter.js"></script>
 <script>
 const D = window.INSPI, items = D.items, famById = {};
 const hue = i => `hsl(${(i * 137.508) % 360} 55% 62%)`;
@@ -170,7 +185,8 @@ const FACETS = [["ty", "Type"], ["te", "Technique"], ["su", "Ce que ça montre"]
 const SW = { "Noir": "#111", "Blanc & crème": "#f3eee2", "Gris": "#8a8a8a", "Brun": "#6d4c41", "Beige": "#d9c7a3", "Rouge": "#d32f2f", "Orange": "#f57c00", "Jaune": "#fdd835", "Vert": "#388e3c", "Bleu": "#1e66d0", "Violet": "#7b3fa0", "Rose": "#ec6fa0" };
 const sel = Object.fromEntries(FACETS.map(([k]) => [k, new Set()]));
 const picked = new Set();
-let simTo = null, simList = [], dupMode = false, sortBy = "new";
+let simTo = null, simList = [], simKind = "px", dupMode = false, sortBy = "new", pickColor = "", tol = 25, savedList = [];
+const F_ = window.InspiFilter;
 const gone = new Set();
 function hueKey(it) {
   const m = /^#?([0-9a-f]{6})$/i.exec(it.c || ""); if (!m) return 999;
@@ -181,6 +197,7 @@ function hueKey(it) {
   return ((h * 60) + 360) % 360;
 }
 function sorted(list) {
+  if (pickColor) return list.slice().sort((x, y) => F_.colorDist(x, pickColor) - F_.colorDist(y, pickColor));
   const a = list.slice(), cmp = {
     new: (x, y) => y.d - x.d, old: (x, y) => x.d - y.d, color: (x, y) => hueKey(x) - hueKey(y),
     title: (x, y) => x.t.localeCompare(y.t, "fr"), board: (x, y) => (x.b || "~").localeCompare(y.b || "~", "fr") || y.d - x.d,
@@ -205,13 +222,13 @@ function toast(msg, undo = true) {
   clearTimeout(toast.t); toast.t = setTimeout(() => $("toast").classList.remove("on"), 12000);
 }
 const byI = new Map(items.map(it => [it.i, it]));
-function similar(ids) {
+function similar(ids, kind) {
   const score = new Map(), src = new Set(ids);
-  ids.forEach(i => (byI.get(i)?.nb || []).forEach(([j, s]) => { if (!src.has(j)) score.set(j, (score.get(j) || 0) + s); }));
+  ids.forEach(i => (byI.get(i)?.[kind === "tag" ? "nb" : "vn"] || []).forEach(([j, s]) => { if (!src.has(j)) score.set(j, (score.get(j) || 0) + s); }));
   return [...score.entries()].sort((a, b) => b[1] - a[1]).map(([j]) => byI.get(j)).filter(Boolean);
 }
-function showSimilar(ids) {
-  simTo = ids; simList = similar(ids);
+function showSimilar(ids, kind = "px") {
+  simTo = ids; simKind = kind; simList = similar(ids, kind);
   if (mode !== "wall") setMode("wall"); else render();
   scrollTo(0, 0);
 }
@@ -225,10 +242,8 @@ function matches(it) {
   if (gone.has(it.i)) return false;
   if (fam !== null && it.f !== fam) return false;
   if (!facetOk(it)) return false;
-  if (!query) return true;
-  const fv = it.fa ? Object.values(it.fa).flat().join(" ") : "";
-  const hay = (it.t + " " + it.b + " " + it.s.join(" ") + " " + it.m.join(" ") + " " + fv + " " + (famById[it.f]?.label || "")).toLowerCase();
-  return query.split(/\s+/).every(w => hay.includes(w));
+  if (pickColor && !F_.colorOk(it, pickColor, tol)) return false;
+  return F_.queryOk(it, query, famById[it.f]?.label || "");
 }
 
 function filters() {
@@ -247,13 +262,44 @@ function filters() {
     });
     box.appendChild(row);
   }
-  const active = FACETS.reduce((a, [k]) => a + sel[k].size, 0);
-  if (active) { const cl = document.createElement("button"); cl.id = "clear"; cl.textContent = "Effacer les filtres"; cl.onclick = () => { FACETS.forEach(([k]) => sel[k].clear()); render(); }; box.appendChild(cl); }
+  const crow = document.createElement("div"); crow.className = "frow crow";
+  crow.innerHTML = `<b>Couleur précise</b><input type="color" id="cpick" value="${esc(pickColor || "#1e66d0")}"><span class="note">marge</span><input type="range" id="ctol" min="8" max="60" value="${tol}"><span class="note" id="ctolv">${tol}</span><button id="capply">Appliquer</button>${pickColor ? `<button id="cclear">Retirer la couleur</button><span class="note">Les images pas encore classées n'ont pas de couleur : elles sortent de ce filtre.</span>` : ""}`;
+  box.appendChild(crow);
+  crow.querySelector("#ctol").oninput = e => { crow.querySelector("#ctolv").textContent = e.target.value; };
+  crow.querySelector("#capply").onclick = () => { pickColor = crow.querySelector("#cpick").value; tol = +crow.querySelector("#ctol").value; render(); };
+  if (pickColor) crow.querySelector("#cclear").onclick = () => { pickColor = ""; render(); };
+  if (location.protocol !== "file:") {
+    const srow = document.createElement("div"); srow.className = "frow srow";
+    srow.innerHTML = `<b>Enregistrer cette recherche</b><input type="text" id="sname" placeholder="nom de la recherche"><label class="note"><input type="checkbox" id="sboard"> Tableau qui se remplit tout seul</label><button id="ssave">Enregistrer</button><span class="note" id="smsg"></span>`;
+    box.appendChild(srow);
+    srow.querySelector("#ssave").onclick = () => saveSearch(srow.querySelector("#sname").value.trim(), srow.querySelector("#sboard").checked).then(m => srow.querySelector("#smsg").textContent = m).catch(e => srow.querySelector("#smsg").textContent = "Échec : " + e.message);
+  }
+  const active = FACETS.reduce((a, [k]) => a + sel[k].size, 0) + (pickColor ? 1 : 0);
+  if (active) { const cl = document.createElement("button"); cl.id = "clear"; cl.textContent = "Effacer les filtres"; cl.onclick = () => { FACETS.forEach(([k]) => sel[k].clear()); pickColor = ""; render(); }; box.appendChild(cl); }
   $("fbtn").textContent = active ? `Filtres (${active})` : "Filtres";
   $("fbtn").classList.toggle("on", !!active);
 }
 $("fbtn").onclick = () => { $("filters").classList.toggle("open"); if (mode === "graph") setMode("graph"); };
 
+async function loadSaved() {
+  if (location.protocol === "file:") return;
+  try { savedList = await (await fetch("/saved")).json(); chips(); } catch (e) {}
+}
+async function postSaved(body) {
+  const r = await fetch("/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); savedList = j; chips(); return j;
+}
+async function saveSearch(name, board) {
+  const facets = Object.fromEntries(FACETS.map(([k]) => [k, [...sel[k]]]).filter(([, v]) => v.length));
+  const nm = slug(name || [query, ...Object.values(facets).flat(), pickColor].filter(Boolean).join(" ") || "recherche");
+  await postSaved({ name: nm.slice(0, 75).replace(/[-_]+$/, ""), query, facets, color: pickColor, tol, board });
+  return board ? `Le tableau auto-${nm} se remplira au prochain passage` : "Recherche enregistrée";
+}
+function applySaved(s) {
+  query = s.query || ""; $("q").value = query;
+  FACETS.forEach(([k]) => { sel[k].clear(); (s.facets?.[k] || []).forEach(v => sel[k].add(v)); });
+  pickColor = s.color || ""; tol = s.tol || 25; simTo = null; dupMode = false; render();
+}
 function chips() {
   const nav = $("fams"); nav.innerHTML = "";
   const all = document.createElement("button");
@@ -273,6 +319,16 @@ function chips() {
     b.innerHTML = `Doublons <i>${nd.reduce((a, g) => a + g.ids.length - 1, 0)}</i>`;
     b.onclick = () => { dupMode = !dupMode; simTo = null; if (mode !== "wall") setMode("wall"); else render(); };
     nav.appendChild(b);
+  }
+  if (savedList.length) {
+    const lab = document.createElement("span"); lab.className = "count"; lab.textContent = "Recherches :"; nav.appendChild(lab);
+    savedList.forEach(s => {
+      const b = document.createElement("button"); b.className = "chip saved";
+      b.innerHTML = `${s.board ? "▦ " : ""}${esc(s.name)}<span class="x" title="Retirer cette recherche">×</span>`;
+      b.onclick = () => applySaved(s);
+      b.querySelector(".x").onclick = e => { e.stopPropagation(); postSaved({ name: s.name, delete: true }).catch(() => {}); };
+      nav.appendChild(b);
+    });
   }
   const nw = items.filter(i => i.f === -2 && !gone.has(i.i)).length;
   if (nw) {
@@ -325,7 +381,7 @@ function wall() {
   if (simTo) {
     shown = simList.filter(it => facetOk(it)).slice(0, 80);
     $("simbar").classList.add("on");
-    $("simtxt").textContent = shown.length ? `${shown.length} images proches de ${simTo.length} image(s), les plus proches d'abord` : "Aucune image proche trouvée (les images pas encore classées n'ont pas de voisines).";
+    $("simtxt").textContent = shown.length ? (simKind === "px" ? `${shown.length} images qui ressemblent à ${simTo.length} image(s), les plus proches d'abord` : `${shown.length} images proches de ${simTo.length} image(s), les plus proches d'abord`) : "Aucune image proche trouvée (les images pas encore classées n'ont pas de voisines).";
   } else { $("simbar").classList.remove("on"); shown = sorted(items.filter(matches)); }
   more();
 }
@@ -414,18 +470,20 @@ function openSide(it) {
   const body = $("sideBody");
   body.innerHTML = `<img src="${esc(it.full)}"><h2></h2>
     <div class="meta">${it.c ? `<span class="sw" style="background:${esc(it.c)}"></span>${esc(it.c)}` : ""}</div>
-    <div class="meta" id="sStyle"></div><div class="meta" id="sMood"></div><div class="meta" id="sBoard"></div>
+    <div class="meta" id="sStyle"></div><div class="meta" id="sMood"></div><div class="meta" id="sBoard"></div><div class="meta" id="sTxt"></div>
     <div class="row"><a href="${esc(it.o)}">Ouvrir dans Obsidian</a>${/^https?:/.test(it.src) ? `<a href="${esc(it.src)}" target="_blank" rel="noopener">Source</a>` : ""}
-    ${f ? `<button id="sFam">Famille : ${esc(f.label)}</button>` : ""}<button id="sPick"></button><button id="sSim">Images similaires</button><button id="sDel">Supprimer</button></div>`;
+    ${f ? `<button id="sFam">Famille : ${esc(f.label)}</button>` : ""}<button id="sPick"></button><button id="sSim">Plus comme ça</button><button id="sTag">Même style</button><button id="sDel">Supprimer</button></div>`;
   const im = body.querySelector("img"); im.onerror = () => { im.onerror = null; im.src = it.img; };
   body.querySelector("h2").textContent = it.t;
   $("sStyle").textContent = it.s.length ? "Style : " + it.s.join(", ") : "";
   $("sMood").textContent = it.m.length ? "Ambiance : " + it.m.join(", ") : "";
   $("sBoard").textContent = it.b ? "Tableau : " + it.b : "";
+  $("sTxt").textContent = it.txt ? "« " + it.txt.slice(0, 200) + (it.txt.length > 200 ? "… »" : " »") : "";
   const sp = $("sPick"), upd = () => sp.textContent = picked.has(it.i) ? "Retirer du moodboard" : "Ajouter au moodboard";
   upd(); sp.onclick = () => { togglePick(it); upd(); render(); };
   $("sDel").onclick = () => { $("side").classList.remove("open"); del([it]).catch(err => toast("Échec : " + err.message, false)); };
-  $("sSim").onclick = () => { $("side").classList.remove("open"); showSimilar([it.i]); };
+  $("sSim").onclick = () => { $("side").classList.remove("open"); showSimilar([it.i], "px"); };
+  $("sTag").onclick = () => { $("side").classList.remove("open"); showSimilar([it.i], "tag"); };
   if (f) $("sFam").onclick = () => { fam = f.id; render(); if (mode === "graph") focusFam(f.id); };
   $("side").classList.add("open");
 }
@@ -515,10 +573,12 @@ function setMode(m) {
 $("tWall").onclick = () => setMode("wall");
 $("tGraph").onclick = () => setMode("graph");
 $("q").oninput = e => { query = e.target.value.trim().toLowerCase(); render(); };
-loadBoards();
-if (location.hash.includes("doublons")) dupMode = true;
-if (location.hash.includes("filtres")) $("filters").classList.add("open");
-if (location.hash.includes("familles")) setMode("graph"); else render();
+loadBoards(); loadSaved();
+const voir = /voir=([^&]+)/.exec(location.hash), flags = location.hash.replace(/voir=[^&]*/, "");
+if (voir) { const rel = decodeURIComponent(voir[1]), it = items.find(i => i.r === rel); if (it) setTimeout(() => openSide(it), 0); }
+if (flags.includes("doublons")) dupMode = true;
+if (flags.includes("filtres")) $("filters").classList.add("open");
+if (flags.includes("familles")) setMode("graph"); else render();
 </script>
 </body>
 </html>

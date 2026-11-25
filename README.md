@@ -2,7 +2,7 @@
 
 Capture any image from the web in one gesture into a dedicated [Obsidian](https://obsidian.md) vault, have a vision model classify it in detail (style, palette with hex values, main color, technique, era, mood, subject, composition...), search everything from the terminal, Obsidian or a Pinterest-style gallery page, and generate Excalidraw moodboards.
 
-macOS only. Everything runs on your machine; images stay in your vault.
+macOS only. Everything runs on your machine; images stay in your vault. The gallery's pixel-based features ("more like this", text read in pictures) use Apple's Vision framework, so they need macOS and the Xcode command line tools (`xcode-select --install`); everything else works without them.
 
 ## Install in one line
 
@@ -50,14 +50,14 @@ The enricher shrinks each image (1568 px long side, JPEG under 5 MB), asks the m
 
 ## Install
 
-Requirements: macOS, Python 3.10+, Obsidian, Chrome or Brave. For classification, one of: the [Claude Code](https://claude.com/claude-code) CLI logged in (default), an `ANTHROPIC_API_KEY`, or [Ollama](https://ollama.com) with a vision model.
+Requirements: macOS, Python 3.10+, Obsidian, Chrome or Brave. Optional, for the gallery's "more like this" and text-in-pictures search: the Xcode command line tools (`xcode-select --install`, they provide `swiftc`). Without them those two features stay empty and nothing else is affected. For classification, one of: the [Claude Code](https://claude.com/claude-code) CLI logged in (default), an `ANTHROPIC_API_KEY`, or [Ollama](https://ollama.com) with a vision model.
 
 ```sh
 git clone <this repo> wiki-inspi && cd wiki-inspi
 ./install.sh            # asks for the vault folder (default ~/Wiki Inspi)
 ```
 
-Options: `--vault PATH --port N --backend claude-cli|anthropic-api|ollama --drop-folder PATH --extension-id ID --non-interactive --no-launchd --no-keychain` (the last stores the token in a 0600 file instead of the Keychain, for CI and dry runs). The script is idempotent; it never overwrites your notes, taxonomy or existing config values. It installs missing Python dependencies (Pillow, PyYAML, anthropic) into a private venv, creates the vault skeleton, writes the config, stores a token in the macOS Keychain, installs the `inspi` command in `~/.local/bin` and three launchd agents (`io.github.wiki-inspi.receiver`, `.watcher`, `.enricher`). `./uninstall.sh` removes them (your vault is left alone).
+Options: `--vault PATH --port N --backend claude-cli|anthropic-api|ollama --drop-folder PATH --extension-id ID --non-interactive --no-launchd --no-keychain` (the last stores the token in a 0600 file instead of the Keychain, for CI and dry runs). The script is idempotent; it never overwrites your notes, taxonomy or existing config values. It installs missing Python dependencies (Pillow, PyYAML, anthropic, networkx, numpy) into a private venv, creates the vault skeleton, writes the config, stores a token in the macOS Keychain, installs the `inspi` command in `~/.local/bin` and three launchd agents (`io.github.wiki-inspi.receiver`, `.watcher`, `.enricher`). `./uninstall.sh` removes them (your vault is left alone).
 
 Then, once:
 
@@ -98,15 +98,20 @@ inspi map                                      # rebuild the gallery page and op
 inspi doctor                                   # check every link, print the fix for what is missing
 ```
 
-`--color` takes a hex or a name and ranks by perceptual distance to each note's palette. Other filters: `--technique --author --domain --use-for`. Reclassify old notes with `python3 src/enrich.py --reenrich-all` (use `~/.local/share/wiki-inspi/venv/bin/python` instead if `install.sh` created that venv); check one note with `--validate NOTE.md`.
+`--color` takes a hex or a name and ranks by perceptual distance to each note's palette. Free text also matches the text read inside the pictures (see the gallery section) once `inspi map` has read them. Other filters: `--technique --author --domain --use-for`. Reclassify old notes with `python3 src/enrich.py --reenrich-all` (use `~/.local/share/wiki-inspi/venv/bin/python` instead if `install.sh` created that venv); check one note with `--validate NOTE.md`.
 
 ### The gallery
 
-`install.sh` (unless `--no-launchd`) adds a launchd agent (`io.github.wiki-inspi.map`) that serves the gallery on `http://127.0.0.1:18766/` and a **Wiki Inspi** app (in `/Applications`, or `~/Applications` if that is not writable) that opens it, starting the server first if needed. The page is rebuilt after each classification pass. Rebuild it by hand with `inspi map`; rebuild the app with `scripts/make_app.sh`.
+`install.sh` (unless `--no-launchd`) adds a launchd agent (`io.github.wiki-inspi.map`) that serves the gallery on `http://127.0.0.1:18766/` and a **Wiki Inspi** app (in `/Applications`, or `~/Applications` if that is not writable) that opens it, starting the server first if needed. The page is rebuilt after each classification pass. Rebuild it by hand with `inspi map` (`inspi map --vision-limit N` reads at most N new pictures per run; the launchd rebuild uses 50, so a big library fills in over a few passes); rebuild the app with `scripts/make_app.sh`.
 
 - **Wall**: every image in columns, with search, sort (newest, oldest, color, title, board, family) and filters by type (photography, cinematic, illustration...), technique (ink, watercolor, mixed media...), what it shows (abstract, geometric, people...), color and temperature. Filters are keyword rules over what the classifier wrote, recomputed on every build, no extra model call.
 - **Families**: a map where close images attract (same style, technique, mood, neighbouring colors). Families are communities in a nearest-neighbour graph (TF-IDF over the classification fields plus Lab color distance, Louvain).
 - **Moodboards**: pick images with **+**, then create a new Excalidraw board or add them to an existing one. Adding never moves what is already on the board; a copy of the board is kept in `~/.local/state/wiki-inspi/board-backups/` before each write. After a board is made, the page shows similar images.
+- **More like this**: select one or more images and click **More like this**: the closest ones by what the pictures look like (composition, texture, subject), not by tags. Computed on your machine by macOS Vision (a small Swift program, `src/inspi_vision.swift`, compiled once to `~/.local/bin/inspi-vision` the first time it is needed) and cached in `<vault>/.wiki-inspi/vision.jsonl`.
+- **Text in pictures**: the same pass reads the text printed in each image (French and English), so the search box and `inspi search` find a poster by a word on it.
+- **Exact color**: pick a color and a tolerance; images whose main color or palette has a close match (perceptual Lab distance) stay.
+- **Saved searches**: name the current search (words, filters, exact color) and keep it as a button. Tick **board that fills itself** and the search owns a moodboard `Moodboards/auto-<name>.excalidraw.md`: each pass only appends the new matches, a picture you removed from the board never comes back, and a board edited in the last 2 minutes is left alone. Boards you made by hand are never touched. Saved searches live in `<vault>/.wiki-inspi/saved.json`.
+- **Picture of the day**: `http://127.0.0.1:18766/today` opens one old capture you have not seen yet (one per day, from your oldest pictures first); `/today.jpg` returns it as an image, handy for a desktop widget.
 - **Duplicates and delete**: identical files (same bytes) and near-identical ones (perceptual hash) are grouped, the classified, larger, older copy is kept by default. **×** moves a note to `<vault>/.trash/wiki-inspi/`, with its image unless another note or board still uses it, and **Undo** puts it back. Nothing is deleted for good from the page.
 - The UI is in French when the browser is in French, English otherwise (`?lang=en` forces it).
 
@@ -114,16 +119,17 @@ inspi doctor                                   # check every link, print the fix
 
 - Images, notes and the index live in your vault. Nothing is uploaded except the classifier call: with `claude-cli` or `anthropic-api` the downscaled image and the page text (title, URL, alt) go to Anthropic; with `ollama` nothing leaves the machine.
 - The receiver listens on 127.0.0.1 only. Any web page can make your browser send requests there, so every request must pass, in order: `Host == 127.0.0.1:<port>` (DNS rebinding), `Origin == chrome-extension://<paired id>` (web pages and other extensions), and a bearer token compared in constant time against the Keychain value on each request. No CORS headers are sent. Image bytes are verified by magic bytes and Pillow, names are server-made, writes are confined to the vault. The one URL the receiver fetches itself is a Pinterest pin page (https, Pinterest host, `pinimg.com` images only).
-- The gallery server also listens on 127.0.0.1 only and checks `Host` on every request; writes (board, delete, restore) also need `Origin == http://127.0.0.1:<map_port>` and a JSON body, so another web page cannot trigger them. It serves only the gallery folder and the vault's `_attachments/`; it never fetches a URL. It has no token: any program already running as you on the machine can call it, same as it can edit the vault directly.
+- The gallery server also listens on 127.0.0.1 only and checks `Host` on every request; writes (board, delete, restore, saved searches) also need `Origin == http://127.0.0.1:<map_port>` and a JSON body, so another web page cannot trigger them. It serves only the gallery folder and the vault's `_attachments/`; it never fetches a URL. It has no token: any program already running as you on the machine can call it, same as it can edit the vault directly.
 - The token is generated in-process and stored in the Keychain (service `wiki-inspi-token`, account = your user). Pairing hands it to the extension once, inside a 60 s window; the extension keeps it in `chrome.storage.local` (readable from your browser profile: it is a dedicated token, rotate it with `scripts/setup-token.sh`). The value is handed to `security add-generic-password -w` through its password prompt (a pseudo-terminal), never as a command-line argument.
 
 ## Limitations
 
-- macOS only (Keychain, launchd, `sips`/Pillow).
+- macOS only (Keychain, launchd, `sips`/Pillow, Vision for the gallery's pixel features).
 - The extension is loaded in developer mode; it is not on the Chrome Web Store.
 - Pinterest: the original-size image is fetched through Pinterest's own pages, which is fragile and subject to their terms. Use it for personal reference only and respect authors' copyright. Same for anything you capture: the tool stores a source URL and, when the page says so, an author, but rights stay with the creator.
 - Classification quality depends on the model; the validator rejects malformed output, not wrong opinions.
 - Obsidian plugins are not bundled; the Base and Dataview views need them.
+- "More like this" and text in pictures need the Xcode command line tools; the first build after install compiles the Swift helper and reading a large library takes a while.
 - The gallery's similar images and families only cover classified notes; notes still in `Inbox/` sit in a "not classified yet" group. Facet rules are keyword matches, so a few images land in the wrong filter.
 
 ## Development
@@ -131,13 +137,14 @@ inspi doctor                                   # check every link, print the fix
 ```sh
 python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt -r requirements-dev.txt
 python3 -m pytest -q tests --ignore=tests/e2e
+node tests/js/inspi_filter_cases.test.js   # the page filter agrees with the Python one (also run by pytest when node exists)
 ```
 
 `tests/e2e/` drives real Chromium with the unpacked extension in a fresh temporary profile (never your real one); it needs Playwright and is optional.
 
 ## En bref (FR)
 
-Un clic droit sur une image web l'envoie dans un vault Obsidian dédié; un modèle de vision la classe (style, palette, couleur principale, technique, époque, ambiance); `inspi search` et `inspi board` cherchent et fabriquent des moodboards Excalidraw ; l'app **Wiki Inspi** ouvre une galerie (mur, filtres, familles d'images, doublons, moodboards en quelques clics). Tout reste en local, sauf l'appel au classifieur si vous choisissez un modèle cloud. Installation : `./install.sh`, puis chargez `extension/` en mode développeur et appairez avec `scripts/setup-token.sh`.
+Un clic droit sur une image web l'envoie dans un vault Obsidian dédié; un modèle de vision la classe (style, palette, couleur principale, technique, époque, ambiance); `inspi search` et `inspi board` cherchent et fabriquent des moodboards Excalidraw ; l'app **Wiki Inspi** ouvre une galerie (mur, filtres, couleur exacte, « plus comme ça » par les pixels, texte lu dans les images, recherches enregistrées avec tableaux qui se remplissent seuls, familles d'images, doublons, moodboards en quelques clics). Les fonctions par les pixels demandent macOS et les outils en ligne de commande Xcode (`xcode-select --install`). Tout reste en local, sauf l'appel au classifieur si vous choisissez un modèle cloud. Installation : `./install.sh`, puis chargez `extension/` en mode développeur et appairez avec `scripts/setup-token.sh`.
 
 ## License
 

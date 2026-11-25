@@ -39,7 +39,15 @@ def run_search(a):
     vault = Path(a.vault)
     filters = {k: getattr(a, k) for k in ("style", "mood", "technique", "author", "domain", "use_for")}
     try:
-        return vault, L.search(L.load_notes(vault), a.query, a.color, filters, a.limit)
+        notes = L.load_notes(vault)
+        import inspi_vision
+
+        ocr = inspi_vision.load(vault)  # text read in the pictures counts as free text
+        for n in notes:
+            row = ocr.get(inspi_vision.sha1(n["image"]) if n["image"] else "") or {}
+            if row.get("txt"):
+                n["why"] = (n["why"] + " " + row["txt"]).strip()
+        return vault, L.search(notes, a.query, a.color, filters, a.limit)
     except ValueError as e:
         sys.exit(f"inspi: {e}")
 
@@ -51,6 +59,7 @@ def main(argv=None):
     sub.add_parser("doctor", help="check every link of the chain and print the fix for what is missing")
     m = sub.add_parser("map", help="rebuild the gallery page and open it in the browser")
     m.add_argument("--no-open", action="store_true")
+    m.add_argument("--vision-limit", type=int, default=None, help="read at most N new pictures (default: all)")
     sub.add_parser("serve", help="serve the gallery on 127.0.0.1 (map_port)")
     s = sub.add_parser("search", help="search captures")
     add_filters(s)
@@ -67,7 +76,7 @@ def main(argv=None):
         import config as _config
         import inspi_map
 
-        print(inspi_map.build(Path(L.VAULT)))
+        print(inspi_map.build(Path(L.VAULT), vision_limit=a.vision_limit))
         if a.no_open:
             return 0
         return subprocess.call(["open", f"http://127.0.0.1:{_config.load().get('map_port', 18766)}/"])
